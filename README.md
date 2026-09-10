@@ -1,6 +1,6 @@
 # Paperplay
 
-Play tic-tac-toe against an agent on real paper. **You draw both X and O.** The camera reads the page, minimax chooses O, and the screen and optional voice tell you where to draw it. A later reading must see that O on the paper before the game moves on.
+Play tic-tac-toe against an agent on real paper. **You draw both X and O.** The camera reads the page, minimax chooses O, and the screen tells you where to draw it. A later reading must see that O on the paper before the game moves on.
 
 The app has a **React + MobX frontend** and a **NestJS backend**. Both run locally; the backend uses the OpenRouter SDK for hosted board reading. No database server or Docker setup is required.
 
@@ -63,7 +63,7 @@ If a reading stalls, click the checkmark in the camera toolbar (**Done drawing. 
 - **Turn order and the second hand.** The human is X and moves first, and the human also draws the agent's O. A displayed O stays dashed on screen until it is confirmed on paper. If the O is drawn in a different empty square, the agent accepts the real placement and says so, because ink on the page is the move.
 - **Where the expensive inference sits.** On selected crops, with additional calls possible for setup, uncertainty, manual checks, and retries. The server enforces 1.5 s between calls per game, 20 calls per minute, 80 per game, and a cumulative spend cap (`AGENT_BUDGET_USD`, default $1).
 - **Latency and cost.** Each request's model latency and reported cost are logged as `agent-request` events in the session log. Frame sampling adds up to a few hundred milliseconds before the call. Speed and price were not benchmarked beyond the demo game.
-- **Output.** The instruction is shown above the live camera and spoken through the browser's built-in speech synthesis when available, so the player can keep looking at the paper. The **Voice** button in the header turns speech off and remembers the choice.
+- **Output.** The instruction is shown above the live camera so the player can see the next mark without guessing.
 
 ## Learning between games (optional Section 2)
 
@@ -84,7 +84,6 @@ Before the NestJS migration, persistence was checked with a synthetic game and a
 | ----------------------------- | ------------------------------------------------------------------------------- |
 | **Done drawing. Check board** | Reanalyzes the current camera view now.                                         |
 | **Detect again**              | Searches for the grid again after the page or camera moved.                     |
-| **Voice**                     | Toggles browser speech and remembers the preference.                            |
 | **Pause**                     | Stops new checks. Hiding the tab also pauses observation.                       |
 | **New game**                  | Starts a fresh session. Use an empty board.                                     |
 | **Save session log**          | Downloads game state, events, recent worker observations, and feedback metrics. |

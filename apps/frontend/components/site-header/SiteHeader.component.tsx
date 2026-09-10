@@ -1,15 +1,11 @@
 import { Circle } from "@phosphor-icons/react";
 import { Question } from "@phosphor-icons/react";
-import { SpeakerHigh } from "@phosphor-icons/react";
-import { SpeakerSlash } from "@phosphor-icons/react";
 import { X } from "@phosphor-icons/react";
 import { cn } from "../shared/cn/cn";
 
 type SiteHeaderProps = {
   compact?: boolean;
   onOpenTutorial: () => void;
-  voiceOn: boolean;
-  onToggleVoice: () => void;
 };
 
 const headerButtonClass = cn("inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-3.5 py-[9px] text-sm text-[#555c6a] hover:bg-[#eaedf3] hover:text-ink", "max-[600px]:gap-1.5 max-[600px]:p-2 max-[600px]:text-[13px]");
@@ -31,8 +27,8 @@ const brandClass = cn(
 
 const brandMarkClass = cn("mr-0.5 flex items-center gap-px text-accent", "max-[600px]:gap-0 max-[600px]:[&_svg]:w-[18px] max-[359px]:hidden");
 
-// Shows the brand, voice toggle, and tutorial button.
-export function SiteHeader({ compact = false, onOpenTutorial, voiceOn, onToggleVoice }: SiteHeaderProps) {
+// Shows the brand and tutorial button.
+export function SiteHeader({ compact = false, onOpenTutorial }: SiteHeaderProps) {
   return (
     <header className={headerClass(compact)}>
       <a className={brandClass} href="/" aria-label="Paperplay home" translate="no">
@@ -44,10 +40,6 @@ export function SiteHeader({ compact = false, onOpenTutorial, voiceOn, onToggleV
         <span className="ml-[3px] text-xs font-medium tracking-normal text-muted max-[800px]:hidden">by Vistral</span>
       </a>
       <div className="flex items-center gap-1">
-        <button type="button" className={headerButtonClass} aria-pressed={voiceOn} aria-label={voiceOn ? "Voice on" : "Voice off"} onClick={onToggleVoice}>
-          {voiceOn ? <SpeakerHigh size={19} aria-hidden="true" /> : <SpeakerSlash size={19} aria-hidden="true" />}
-          <span className="max-[600px]:hidden">Voice</span>
-        </button>
         <button type="button" className={headerButtonClass} onClick={onOpenTutorial}>
           <Question size={19} aria-hidden="true" /> Tutorial
         </button>

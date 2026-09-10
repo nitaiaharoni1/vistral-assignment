@@ -78,12 +78,7 @@ describe("AppStore", () => {
     expect(payload.assumptions.mode).toBe("replay");
   });
 
-  it("toggles voice and writes a download link", () => {
-    const game = new GameStore();
-    const app = new AppStore(game, vi.fn());
-    const start = app.voiceOn;
-    app.toggleVoice();
-    expect(app.voiceOn).toBe(!start);
+  it("writes a download link", () => {
     const click = vi.fn();
     const link = {
       href: "",

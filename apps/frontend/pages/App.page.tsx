@@ -44,7 +44,7 @@ const AppChrome = observer(function AppChrome({ app }: { app: AppStore }) {
         <a href="#main" className={skipLinkClass}>
           Skip to game
         </a>
-        <SiteHeader compact={!game.welcome} onOpenTutorial={app.openTutorial} voiceOn={app.voiceOn} onToggleVoice={app.toggleVoice} />
+        <SiteHeader compact={!game.welcome} onOpenTutorial={app.openTutorial} />
         <main id="main" className={game.welcome ? appShellClass : gameMainClass}>
           <div className={game.welcome ? welcomeWorkspaceClass : gameWorkspaceClass}>
             <CameraWorkspace onNewGame={app.requestNewGame} />
@@ -66,8 +66,6 @@ const AppChrome = observer(function AppChrome({ app }: { app: AppStore }) {
 const App = observer(function App({ saveSessionFile = saveFile }: { saveSessionFile?: SaveSessionFile }) {
   const game = useCreateGameStore();
   const app = useMemo(() => new AppStore(game, saveSessionFile), [game, saveSessionFile]);
-
-  useEffect(() => app.startVoice(), [app]);
 
   useLayoutEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });

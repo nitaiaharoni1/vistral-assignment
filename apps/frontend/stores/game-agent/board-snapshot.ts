@@ -2,6 +2,8 @@ import { projectUv } from "../../lib/board-geometry/board-geometry";
 import { quadrilateralTransform } from "../../lib/board-geometry/board-geometry";
 import { components } from "../camera-feed/workers/board-reader/ink-components";
 import { paperLevels } from "../camera-feed/workers/board-reader/board-image";
+import { luma } from "../camera-feed/workers/board-reader/board-image";
+import { cleanPaperImage } from "../../lib/paper-image/paper-image";
 import type { Board } from "../../types";
 import type { Point } from "../../types";
 
@@ -15,11 +17,7 @@ export function captureBoard(source: HTMLCanvasElement, corners: Point[]): Board
   const context = source.getContext("2d", { willReadFrequently: true });
   if (!context) throw new Error("The camera frame is unavailable.");
   const input = context.getImageData(0, 0, source.width, source.height);
-  const size = 384;
-  const target = document.createElement("canvas");
-  target.width = target.height = size;
-  const output = target.getContext("2d")!;
-  const data = output.createImageData(size, size);
+  const size = 288;
   const gray = new Float32Array(size * size);
   const transform = quadrilateralTransform(corners);
   for (let y = 0; y < size; y++)
@@ -27,19 +25,28 @@ export function captureBoard(source: HTMLCanvasElement, corners: Point[]): Board
       const [u, v] = projectUv(transform, (x + 0.5) / size, (y + 0.5) / size);
       const sx = Math.min(source.width - 1, Math.max(0, Math.round(u * source.width)));
       const sy = Math.min(source.height - 1, Math.max(0, Math.round(v * source.height)));
-      const at = (y * size + x) * 4,
-        from = (sy * source.width + sx) * 4;
-      data.data[at] = input.data[from];
-      data.data[at + 1] = input.data[from + 1];
-      data.data[at + 2] = input.data[from + 2];
-      data.data[at + 3] = 255;
-      gray[y * size + x] = input.data[from] * 0.299 + input.data[from + 1] * 0.587 + input.data[from + 2] * 0.114;
+      gray[y * size + x] = luma(input.data, (sy * source.width + sx) * 4);
     }
-  output.putImageData(data, 0, 0);
+  let image: string | undefined;
   return {
-    image: target.toDataURL("image/jpeg", 0.85),
+    get image() {
+      return (image ??= encodeBoard(cleanPaperImage(gray, size, size).pixels, size));
+    },
     ink: boardInk(gray, size),
   };
+}
+
+function encodeBoard(gray: Float32Array, size: number): string {
+  const target = document.createElement("canvas");
+  target.width = target.height = size;
+  const output = target.getContext("2d")!;
+  const data = output.createImageData(size, size);
+  for (let at = 0; at < gray.length; at++) {
+    data.data[at * 4] = data.data[at * 4 + 1] = data.data[at * 4 + 2] = gray[at];
+    data.data[at * 4 + 3] = 255;
+  }
+  output.putImageData(data, 0, 0);
+  return target.toDataURL("image/jpeg", 0.85);
 }
 
 // Measures ink in each square.

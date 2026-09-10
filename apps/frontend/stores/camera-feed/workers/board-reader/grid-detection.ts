@@ -5,6 +5,7 @@ import { luma } from "./board-image";
 import { boardTransform } from "./board-image";
 import { createCalibration } from "./calibration";
 import { scoreBoardCandidate } from "./calibration";
+import { cleanPaperImage } from "../../../../lib/paper-image/paper-image";
 
 type Line = { slope: number; offset: number; votes: number };
 
@@ -13,28 +14,19 @@ function inkPoints(image: ImageData) {
   const scale = Math.min(1, 360 / Math.max(image.width, image.height));
   const width = Math.round(image.width * scale);
   const height = Math.round(image.height * scale);
-  const pixels = new Float32Array(width * height);
-  const stride = width + 1;
-  const integral = new Float64Array(stride * (height + 1));
+  const gray = new Float32Array(width * height);
   for (let y = 0; y < height; y++) {
-    let row = 0;
     for (let x = 0; x < width; x++) {
       const at = (Math.min(image.height - 1, Math.round(y / scale)) * image.width + Math.min(image.width - 1, Math.round(x / scale))) * 4;
-      const value = luma(image.data, at);
-      pixels[y * width + x] = value;
-      row += value;
-      integral[(y + 1) * stride + x + 1] = integral[y * stride + x + 1] + row;
+      gray[y * width + x] = luma(image.data, at);
     }
   }
+  const { pixels, background } = cleanPaperImage(gray, width, height);
   const points: Point[] = [];
   for (let y = 4; y < height - 4; y++) {
     for (let x = 4; x < width - 4; x++) {
-      const left = Math.max(0, x - 9),
-        right = Math.min(width, x + 10);
-      const top = Math.max(0, y - 9),
-        bottom = Math.min(height, y + 10);
-      const mean = (integral[bottom * stride + right] - integral[top * stride + right] - integral[bottom * stride + left] + integral[top * stride + left]) / ((right - left) * (bottom - top));
       const at = y * width + x;
+      const mean = background[at];
       const threshold = Math.max(24, mean * 0.2);
       // Ink has lighter paper on both sides. A page edge or broad shadow
       // only has a lighter side, even when it wins the line vote.

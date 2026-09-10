@@ -84,7 +84,7 @@ describe("GameAgentAnalyzeService", () => {
     expect(user.filter((part: { type: string }) => part.type === "image_url")).toHaveLength(3);
     expect(user[0].text).toMatch(/Actual cells/);
     expect(user.at(-2).text).toMatch(/intended O cell: 0/);
-    expect(PROMPT_VERSION).toBe("paper-board-v2");
+    expect(PROMPT_VERSION).toBe("paper-board-v3");
     expect(body.messages[0].content).toMatch(/only read the board/);
   });
 

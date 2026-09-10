@@ -47,7 +47,7 @@ describe("captureBoard", () => {
     expect(() => captureBoard(canvas, corners)).toThrow(/unavailable/);
   });
 
-  it("warps the frame into a jpeg snapshot", () => {
+  it("warps the frame and only creates a jpeg when needed", () => {
     const pixels = new Uint8ClampedArray(40 * 40 * 4).fill(220);
     const source = {
       width: 40,
@@ -60,11 +60,12 @@ describe("captureBoard", () => {
         };
       },
     } as unknown as HTMLCanvasElement;
+    const encode = vi.fn(() => "data:image/jpeg;base64,/9j/SNAP");
     const create = vi.spyOn(document, "createElement").mockImplementation(() => {
       const data = {
-        data: new Uint8ClampedArray(384 * 384 * 4),
-        width: 384,
-        height: 384,
+        data: new Uint8ClampedArray(288 * 288 * 4),
+        width: 288,
+        height: 288,
       };
       return {
         width: 0,
@@ -75,12 +76,16 @@ describe("captureBoard", () => {
             putImageData() {},
           };
         },
-        toDataURL: () => "data:image/jpeg;base64,/9j/SNAP",
+        toDataURL: encode,
       } as unknown as HTMLCanvasElement;
     });
     const snapshot = captureBoard(source, corners);
-    create.mockRestore();
+    expect(create).not.toHaveBeenCalled();
+    expect(encode).not.toHaveBeenCalled();
     expect(snapshot.image).toBe("data:image/jpeg;base64,/9j/SNAP");
+    expect(snapshot.image).toBe("data:image/jpeg;base64,/9j/SNAP");
+    expect(encode).toHaveBeenCalledTimes(1);
     expect(snapshot.ink).toHaveLength(9);
+    create.mockRestore();
   });
 });

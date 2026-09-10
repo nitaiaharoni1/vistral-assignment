@@ -1,7 +1,5 @@
 import { makeAutoObservable } from "mobx";
-import { reaction } from "mobx";
 import type { GameStore } from "./game/game.store";
-import { actionCopy } from "../components/next-action/NextAction.component";
 
 export type SaveSessionFile = (blob: Blob, filename: string) => void;
 
@@ -17,30 +15,10 @@ export function saveFile(blob: Blob, filename: string) {
   window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
 
-const VOICE_KEY = "paperplay-voice";
-
-// Reads whether spoken guidance was left on.
-function savedVoice(): boolean {
-  try {
-    return localStorage.getItem(VOICE_KEY) !== "off";
-  } catch {
-    return true;
-  }
-}
-
-// Speaks the given text aloud.
-export function speak(text: string) {
-  if (typeof speechSynthesis === "undefined") return;
-  speechSynthesis.cancel();
-  if (!text) return;
-  speechSynthesis.speak(new SpeechSynthesisUtterance(text));
-}
-
 export class AppStore {
   tutorialOpen = false;
   notice = "";
   resetOpen = false;
-  voiceOn = savedVoice();
 
   // Wires the store to the game and file saver.
   constructor(
@@ -55,31 +33,6 @@ export class AppStore {
       },
       { autoBind: true },
     );
-  }
-
-  // Speaks each new on-screen instruction.
-  startVoice(): () => void {
-    return reaction(
-      () => this.spokenInstruction,
-      (text) => speak(text),
-    );
-  }
-
-  // Builds the spoken line for the current action.
-  get spokenInstruction(): string {
-    if (!this.voiceOn || !this.game.inGame) return "";
-    const { title, guidance } = actionCopy(this.game);
-    if (title.endsWith("…")) return "";
-    return `${title} ${guidance}`;
-  }
-
-  // Turns spoken guidance on or off.
-  toggleVoice() {
-    this.voiceOn = !this.voiceOn;
-    if (!this.voiceOn && typeof speechSynthesis !== "undefined") speechSynthesis.cancel();
-    try {
-      localStorage.setItem(VOICE_KEY, this.voiceOn ? "on" : "off");
-    } catch {}
   }
 
   // Opens the tutorial overlay.

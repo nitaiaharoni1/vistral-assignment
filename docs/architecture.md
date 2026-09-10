@@ -1,12 +1,12 @@
 # Paperplay architecture
 
-Paperplay has three jobs: **read the paper, manage the game, and choose a move**. The hosted model reads marks. Rule-based code accepts board changes, and minimax searches for O's best move. A displayed or spoken instruction is still only a request: the next reading must see the mark on paper.
+Paperplay has three jobs: **read the paper, manage the game, and choose a move**. The hosted model reads marks. Rule-based code accepts board changes, and minimax searches for O's best move. A displayed instruction is still only a request: the next reading must see the mark on paper.
 
 Start with each **TL;DR** and diagram. **Built** describes the current React/MobX frontend and NestJS backend. **Proposed** describes an expansion to more games and customers. NestJS services are currently classes in one local process, not independent deployments. The [standalone overview](architecture.svg) summarizes the design; the [README](../README.md) gives the startup commands.
 
 ## 1. End-to-end flow
 
-> **TL;DR:** The browser picks a clear picture, the model reads it, and the server checks the rules and chooses a move. The person sees and can hear where to draw next.
+> **TL;DR:** The browser picks a clear picture, the model reads it, and the server checks the rules and chooses a move. The person sees where to draw next.
 
 <!-- mermaid:id=diagram_1 -->
 
@@ -18,7 +18,7 @@ flowchart TB
   API --> Reader["OpenRouter SDK: model reads nine cells"]
   Reader --> Board["Board service: validate reading and run minimax"]
   Board --> Save[("Save game, metrics, and pending move")]
-  Save --> Reply["Reply: screen and optional browser voice"]
+  Save --> Reply["Reply: screen instruction"]
   Reply --> Human["Person draws the requested mark"]
   Human --> Camera
 ```
@@ -29,7 +29,7 @@ flowchart TB
 
 `GameAgentBoardService` requires `clear=true`, nine known marks with confidence **>=0.85**, legal counts, and an acceptable transition. It holds the existing board on uncertainty or rejection. Shared session code calls `chooseMove` for exact minimax. That search is optimal for its input board; the physical game can still go wrong through misreads or drawing O elsewhere. Confidence scores are not calibrated probabilities.
 
-**Built: output and local modes.** The reply updates the screen. `AppStore` can speak new instructions using browser speech synthesis, with a saved **Voice** preference. There is no in-app video recorder. Video replay and **See it play** use local shape recognition and minimax without the backend or an API key. Their acceptance rule is separate: confidence >=0.78, five readings over at least 500 ms, with a maximum 1,200 ms gap per cell. Camera model responses do not go through that five-reading gate. Camera play has no automatic local-reader fallback when the backend fails.
+**Built: output and local modes.** The reply updates the screen. There is no in-app video recorder. Video replay and **See it play** use local shape recognition and minimax without the backend or an API key. Their acceptance rule is separate: confidence >=0.78, five readings over at least 500 ms, with a maximum 1,200 ms gap per cell. Camera model responses do not go through that five-reading gate. Camera play has no automatic local-reader fallback when the backend fails.
 
 **One camera turn, built:**
 
@@ -48,7 +48,7 @@ sequenceDiagram
   alt Clear and legal
     Server->>Server: Accept X; minimax selects pending O; persist
     Server-->>Browser: Updated game and instruction
-    Browser-->>Person: Show and optionally speak where to draw O
+    Browser-->>Person: Show where to draw O
     Note over Person,Server: O remains pending until it is seen on paper
     Person->>Browser: Draw O, then clear the view
     Browser->>Server: Next selected crop
@@ -105,7 +105,7 @@ flowchart TB
   Coordinator -->|"confirmed board and rules version"| Chooser["Decision service: search"]
   Chooser -->|"move proposal for that board"| Coordinator
   Coordinator --> Store[("History and pending instructions")]
-  Store --> Delivery["Deliver saved screen or voice instruction"] --> Client
+  Store --> Delivery["Deliver saved screen instruction"] --> Client
 ```
 
 The perception service owns alignment, recent crops, and reader versions. The decision service owns game-package interpretation and bounded search, with no model required for small fully observable games. The coordinator owns ordered history; delivery owns instruction IDs and acknowledgements. These process boundaries, durable delivery, capture timestamps, and alignment-version checks are proposed, not implemented merely by adopting NestJS.
@@ -136,7 +136,7 @@ Validate schemas, legal/illegal positions, outcomes, and resource limits before 
 
 **Built.** The backend loads `agent-state.json` from `PAPERPLAY_DIR`, defaulting to `.paperplay` relative to the working directory. It retains games, the latest analyzed image per game, two corrected images per profile, capture memory, and cumulative spend. `StorageService` requests directory/file permissions 0700/0600 and serializes writes through a temporary file and rename. There is no database, file encryption, or retention workflow.
 
-The browser stores `paperplay-profile` and the voice preference locally. It does not retain the current session ID for reload recovery. Profile IDs separate example memory; capture memory additionally includes model, prompt version, and algorithm. All profiles still share one process and file, with global limits. A person who possesses a session ID can access its routes. Keep custom storage directories private and outside served files; the default `.paperplay` and environment files are excluded from git and Vite's public file access.
+The browser stores `paperplay-profile` locally. It does not retain the current session ID for reload recovery. Profile IDs separate example memory; capture memory additionally includes model, prompt version, and algorithm. All profiles still share one process and file, with global limits. A person who possesses a session ID can access its routes. Keep custom storage directories private and outside served files; the default `.paperplay` and environment files are excluded from git and Vite's public file access.
 
 **Proposed ownership:**
 
