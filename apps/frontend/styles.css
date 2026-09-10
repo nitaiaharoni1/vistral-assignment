@@ -1,0 +1,195 @@
+@import "tailwindcss";
+
+@custom-variant short-landscape {
+  @media (max-height: 500px) and (min-width: 600px) {
+    @slot;
+  }
+}
+
+@custom-variant short-orient {
+  @media (max-height: 500px) and (orientation: landscape) {
+    @slot;
+  }
+}
+
+@theme {
+  --font-sans: "Figtree Variable", sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+  --color-ink: #191c23;
+  --color-muted: #626773;
+  --color-line: #dce0e8;
+  --color-paper: #fff;
+  --color-canvas: #f7f8fa;
+  --color-accent: #244de8;
+  --color-accent-hover: #163ac7;
+  --color-accent-wash: #edf1ff;
+  --color-player-x: #244de8;
+  --color-player-o: #a34b00;
+  --color-board-outline: #59616b;
+  --color-draw-guide: #7638b5;
+  --color-draw-guide-wash: #f3ebfb;
+  --color-player-x-wash: rgb(36 77 232 / 12%);
+  --color-player-o-wash: rgb(163 75 0 / 14%);
+  --color-welcome-stage: #2050e5;
+  --color-attention: #80551d;
+  --color-attention-wash: #faeed8;
+  --color-error: #844a22;
+  --color-error-wash: #faf0e8;
+  --ease-settle: cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-turn-change: turn-change 240ms var(--ease-settle);
+  --animate-dialog-open: dialog-open 300ms var(--ease-settle);
+  --animate-tutorial-step: tutorial-step 240ms var(--ease-settle);
+  --animate-motion-fade: motion-fade 160ms ease-out;
+  --animate-ink-confirmed: ink-confirmed 240ms var(--ease-settle) both;
+
+  @keyframes turn-change {
+    from {
+      opacity: 0.5;
+      transform: translateY(5px) scale(0.92);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes dialog-open {
+    from {
+      opacity: 0.5;
+      transform: translateY(10px) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes tutorial-step {
+    from {
+      opacity: 0.5;
+      transform: translateX(var(--step-offset, 12px));
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes motion-fade {
+    from {
+      opacity: 0.5;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes ink-confirmed {
+    from {
+      opacity: 0.45;
+      transform: scale(0.8);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+}
+
+@layer base {
+  :root {
+    font-family: var(--font-sans);
+    font-synthesis: none;
+    color: var(--color-ink);
+    background: var(--color-canvas);
+    font-size: 16px;
+    font-weight: 450;
+    color-scheme: light;
+    scrollbar-color: #adb5c6 #f7f8fa;
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+
+  body {
+    min-width: 320px;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right)
+      env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+
+  button,
+  a,
+  summary {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  button:disabled {
+    opacity: 0.42;
+    cursor: not-allowed;
+  }
+
+  button,
+  a {
+    transition:
+      background-color 180ms,
+      color 180ms,
+      border-color 180ms;
+  }
+
+  button:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 5px;
+  }
+
+  ::selection {
+    background: #cbd5ff;
+    color: #17244f;
+  }
+
+  h1,
+  h2 {
+    text-wrap: balance;
+  }
+
+  p {
+    line-height: 1.6;
+  }
+
+  svg {
+    flex-shrink: 0;
+  }
+
+  dialog {
+    margin: auto;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-delay: 0ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+
+    .motion-settle {
+      animation-name: motion-fade !important;
+      animation-duration: 100ms !important;
+    }
+  }
+}
+
+html:has(.game-viewport),
+body:has(.game-viewport) {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}

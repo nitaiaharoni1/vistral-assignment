@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="210mm" height="297mm" viewBox="0 0 794 1123" role="img" aria-labelledby="title desc">
+  <title id="title">Paperplay printable board</title>
+  <desc id="desc">An empty three by three tic-tac-toe grid with no row letters or column numbers.</desc>
+  <rect width="794" height="1123" fill="#fff"/>
+  <text x="80" y="112" font-family="Arial, sans-serif" font-size="25" font-weight="700" fill="#191c23">paperplay</text>
+  <g fill="none" stroke="#191c23" stroke-width="3.5" stroke-linecap="square">
+    <rect x="112" y="282" width="570" height="570"/>
+    <path d="M302 282V852 M492 282V852 M112 472H682 M112 662H682"/>
+  </g>
+  <text x="397" y="1020" font-family="Arial, sans-serif" font-size="13" text-anchor="middle" fill="#626773">Print on A4 or Letter, fit to page.</text>
+</svg>
