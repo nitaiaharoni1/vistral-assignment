@@ -1,31 +1,71 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach } from "vitest";
+import { describe } from "vitest";
+import { expect } from "vitest";
+import { it } from "vitest";
+import { vi } from "vitest";
 import { FrameReader } from "./frame-reader.helpers";
 
 class FakeWorker extends EventTarget {
   posted: unknown[] = [];
   terminated = false;
+  private listeners = new Map<string, EventListener[]>();
 
+  // Stores a listener so tests can emit events.
+  addEventListener(type: string, listener: EventListenerOrEventListenerObject) {
+    const handler = typeof listener === "function" ? listener : listener.handleEvent.bind(listener);
+    const list = this.listeners.get(type) ?? [];
+    list.push(handler);
+    this.listeners.set(type, list);
+    super.addEventListener(type, listener);
+  }
+
+  // Drops a stored listener.
+  removeEventListener(type: string, listener: EventListenerOrEventListenerObject) {
+    const handler = typeof listener === "function" ? listener : listener.handleEvent.bind(listener);
+    this.listeners.set(
+      type,
+      (this.listeners.get(type) ?? []).filter((item) => item !== handler),
+    );
+    super.removeEventListener(type, listener);
+  }
+
+  // Records a posted worker message.
   postMessage(message: unknown) {
     this.posted.push(message);
   }
 
+  // Marks the fake worker as terminated.
   terminate() {
     this.terminated = true;
+  }
+
+  // Delivers an event to stored listeners.
+  emit(type: string, data?: unknown) {
+    const event = { currentTarget: this, data } as unknown as MessageEvent;
+    for (const listener of this.listeners.get(type) ?? []) listener(event);
   }
 }
 
 let created: FakeWorker | undefined;
 
+// Remembers the last created fake worker.
 function remember(worker: FakeWorker) {
   created = worker;
 }
 
+// Builds a tiny test image.
 function frame() {
   return { data: new Uint8ClampedArray(16), width: 2, height: 2 } as ImageData;
 }
 
+// Throws when a worker cannot be created.
 function failWorker() {
   throw new Error("no worker");
+}
+
+// Emits an event from a fake worker.
+function deliver(worker: FakeWorker, type: string, data?: unknown) {
+  worker.emit(type, data);
 }
 
 describe("FrameReader", () => {
@@ -35,11 +75,13 @@ describe("FrameReader", () => {
     vi.unstubAllGlobals();
   });
 
+  // Installs a fake Worker that records the instance.
   function stubWorker() {
     created = undefined;
     vi.stubGlobal(
       "Worker",
       class extends FakeWorker {
+        // Remembers this fake worker instance.
         constructor() {
           super();
           remember(this);
@@ -48,6 +90,7 @@ describe("FrameReader", () => {
     );
   }
 
+  // Starts a FrameReader against the fake worker.
   function start() {
     stubWorker();
     const onReply = vi.fn();
@@ -101,27 +144,20 @@ describe("FrameReader", () => {
   it("delivers a matching reply and ignores a stale one", () => {
     const { reader, onReply, worker } = start();
     reader.send({ type: "detect", image: frame() });
-    worker.dispatchEvent(
-      new MessageEvent("message", {
-        data: { type: "error", id: 99, message: "old" },
-      }),
-    );
+    const id = (worker.posted[0] as { id: number }).id;
+    deliver(worker, "message", { type: "error", id: id + 10, message: "old" });
     expect(onReply).not.toHaveBeenCalled();
-    worker.dispatchEvent(
-      new MessageEvent("message", {
-        data: { type: "detected", id: 1, corners: null },
-      }),
-    );
+    deliver(worker, "message", { type: "detected", id, corners: null });
     expect(onReply).toHaveBeenCalledOnce();
     expect(reader.busy).toBe(false);
   });
 
   it("fails when the worker errors or returns junk", () => {
     const first = start();
-    first.worker.dispatchEvent(new ErrorEvent("error"));
+    deliver(first.worker, "error");
     expect(first.onFailure.mock.calls[0][0]).toMatch(/reader stopped/);
     const second = start();
-    second.worker.dispatchEvent(new MessageEvent("messageerror"));
+    deliver(second.worker, "messageerror");
     expect(second.onFailure.mock.calls[0][0]).toMatch(/unreadable response/);
   });
 });

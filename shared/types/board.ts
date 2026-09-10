@@ -20,19 +20,10 @@ export type Observation = {
   quality: "good" | "moving" | "dark" | "occluded" | "misaligned";
   message: string;
 };
-export const CELL_NAMES = [
-  "top left",
-  "top center",
-  "top right",
-  "middle left",
-  "center",
-  "middle right",
-  "bottom left",
-  "bottom center",
-  "bottom right",
-];
+export const CELL_NAMES = ["top left", "top center", "top right", "middle left", "center", "middle right", "bottom left", "bottom center", "bottom right"];
 export const CELL_IDS = ["A1", "A2", "A3", "B1", "B2", "B3", "C1", "C2", "C3"];
 
+// Tells the player which square to draw O in.
 export function drawOInstruction(cell: number): string {
   return `Draw O in the ${CELL_NAMES[cell]}.`;
 }

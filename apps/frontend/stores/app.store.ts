@@ -1,9 +1,11 @@
-import { makeAutoObservable, reaction } from "mobx";
+import { makeAutoObservable } from "mobx";
+import { reaction } from "mobx";
 import type { GameStore } from "./game/game.store";
 import { actionCopy } from "../components/next-action/NextAction.component";
 
 export type SaveSessionFile = (blob: Blob, filename: string) => void;
 
+// Downloads a blob as a named file.
 export function saveFile(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -17,6 +19,7 @@ export function saveFile(blob: Blob, filename: string) {
 
 const VOICE_KEY = "paperplay-voice";
 
+// Reads whether spoken guidance was left on.
 function savedVoice(): boolean {
   try {
     return localStorage.getItem(VOICE_KEY) !== "off";
@@ -25,9 +28,11 @@ function savedVoice(): boolean {
   }
 }
 
+// Speaks the given text aloud.
 export function speak(text: string) {
-  if (typeof speechSynthesis === "undefined" || !text) return;
+  if (typeof speechSynthesis === "undefined") return;
   speechSynthesis.cancel();
+  if (!text) return;
   speechSynthesis.speak(new SpeechSynthesisUtterance(text));
 }
 
@@ -37,6 +42,7 @@ export class AppStore {
   resetOpen = false;
   voiceOn = savedVoice();
 
+  // Wires the store to the game and file saver.
   constructor(
     private readonly game: GameStore,
     private readonly saveSessionFile: SaveSessionFile,
@@ -51,6 +57,7 @@ export class AppStore {
     );
   }
 
+  // Speaks each new on-screen instruction.
   startVoice(): () => void {
     return reaction(
       () => this.spokenInstruction,
@@ -58,6 +65,7 @@ export class AppStore {
     );
   }
 
+  // Builds the spoken line for the current action.
   get spokenInstruction(): string {
     if (!this.voiceOn || !this.game.inGame) return "";
     const { title, guidance } = actionCopy(this.game);
@@ -65,32 +73,37 @@ export class AppStore {
     return `${title} ${guidance}`;
   }
 
+  // Turns spoken guidance on or off.
   toggleVoice() {
     this.voiceOn = !this.voiceOn;
-    if (!this.voiceOn && typeof speechSynthesis !== "undefined")
-      speechSynthesis.cancel();
+    if (!this.voiceOn && typeof speechSynthesis !== "undefined") speechSynthesis.cancel();
     try {
       localStorage.setItem(VOICE_KEY, this.voiceOn ? "on" : "off");
     } catch {}
   }
 
+  // Opens the tutorial overlay.
   openTutorial() {
     this.tutorialOpen = true;
   }
 
+  // Closes the tutorial overlay.
   closeTutorial() {
     this.tutorialOpen = false;
   }
 
+  // Closes the tutorial and starts the camera if idle.
   finishTutorial() {
     this.closeTutorial();
     if (this.game.stage === "idle") void this.game.startCamera();
   }
 
+  // Clears the current notice.
   dismissNotice() {
     this.notice = "";
   }
 
+  // Restarts a finished game or asks before resetting a live one.
   requestNewGame() {
     if (this.game.session.phase === "finished") {
       this.restart();
@@ -99,16 +112,19 @@ export class AppStore {
     this.resetOpen = true;
   }
 
+  // Closes the reset prompt without restarting.
   keepPlaying() {
     this.resetOpen = false;
   }
 
+  // Starts a new game and clears notices.
   restart() {
     this.game.restartGame();
     this.resetOpen = false;
     this.notice = "";
   }
 
+  // Saves a session log without video.
   exportSession() {
     const { session, source, observation } = this.game;
     const { boardCheck, ...savedSession } = session;
@@ -123,29 +139,18 @@ export class AppStore {
         policy: "minimax-v1",
         app: "1.0.0",
       },
-      assumptions:
-        session.mode === "replay"
-          ? { mode: "replay", intermediateMoveOrderMayBeUnknown: true }
-          : { human: "X", agent: "O", suggestionsAreNotMoves: true },
+      assumptions: session.mode === "replay" ? { mode: "replay", intermediateMoveOrderMayBeUnknown: true } : { human: "X", agent: "O", suggestionsAreNotMoves: true },
       session: {
         ...savedSession,
         needsBoardCheck: boardCheck !== "ready",
-        boardCheckReason:
-          boardCheck === "ready"
-            ? null
-            : boardCheck === "interrupted"
-              ? "interrupt"
-              : "registration",
+        boardCheckReason: boardCheck === "ready" ? null : boardCheck === "interrupted" ? "interrupt" : "registration",
         registrationRecovered: boardCheck === "verifying-grid",
       },
       lastObservation: observation,
       observationHistory: this.game.getObservationHistory(),
       calibration: this.game.corners,
-      captureFeedback: this.game.agent.reply?.feedback ?? null,
-      evidence:
-        source === "sample"
-          ? "Synthetic pixels. This is not a physical human game."
-          : "Observations only. Review the separately recorded video for physical evidence.",
+      captureFeedback: this.game.gameAgent.reply?.feedback ?? null,
+      evidence: source === "sample" ? "Synthetic pixels. This is not a physical human game." : "Observations only. Review the separately recorded video for physical evidence.",
     };
     this.saveSessionFile(
       new Blob([JSON.stringify(payload, null, 2)], {
@@ -153,7 +158,6 @@ export class AppStore {
       }),
       `paperplay-${source}-session.json`,
     );
-    this.notice =
-      "Session log ready to save. It contains observations and decisions, not video.";
+    this.notice = "Session log ready to save. It contains observations and decisions, not video.";
   }
 }

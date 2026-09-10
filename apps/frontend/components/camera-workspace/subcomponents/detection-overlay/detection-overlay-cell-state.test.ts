@@ -1,16 +1,14 @@
-import { describe, expect, it } from "vitest";
-import { createSession } from "@shared/session.helpers";
-import {
-  observation,
-  session,
-} from "../../../../../../tests/helpers/boards.ts";
-import {
-  boardAnalysisLabel,
-  buildOverlayView,
-  isOverlayReadable,
-  overlayAriaLabel,
-  type OverlayGameSnapshot,
-} from "./detection-overlay-cell-state";
+import { describe } from "vitest";
+import { expect } from "vitest";
+import { it } from "vitest";
+import { createSession } from "@shared/session-helpers/session.helpers";
+import { observation } from "../../../../../../tests/helpers/boards.ts";
+import { session } from "../../../../../../tests/helpers/boards.ts";
+import { boardAnalysisLabel } from "./detection-overlay-cell-state";
+import { buildOverlayView } from "./detection-overlay-cell-state";
+import { isOverlayReadable } from "./detection-overlay-cell-state";
+import { overlayAriaLabel } from "./detection-overlay-cell-state";
+import type { OverlayGameSnapshot } from "./detection-overlay-cell-state";
 import { buildOverlayGeometry } from "./detection-overlay-geometry";
 
 const CORNERS = [
@@ -20,9 +18,8 @@ const CORNERS = [
   { x: 0.2, y: 0.8 },
 ];
 
-function game(
-  overrides: Partial<OverlayGameSnapshot> = {},
-): OverlayGameSnapshot {
+// Builds a default overlay snapshot for tests.
+function game(overrides: Partial<OverlayGameSnapshot> = {}): OverlayGameSnapshot {
   return {
     stage: "playing",
     error: "",
@@ -37,13 +34,11 @@ describe("isOverlayReadable", () => {
   it("needs an in-game, unpaused, well-lit nine-cell observation", () => {
     expect(isOverlayReadable(game())).toBe(true);
     expect(isOverlayReadable(game({ stage: "detecting" }))).toBe(false);
-    expect(
-      isOverlayReadable(game({ session: session({ paused: true }) })),
-    ).toBe(false);
+    expect(isOverlayReadable(game({ session: session({ paused: true }) }))).toBe(false);
     expect(
       isOverlayReadable(
         game({
-          observation: observation(".........", 10, [], { quality: "dark" }),
+          observation: observation(".........", 10, { quality: "dark" }),
         }),
       ),
     ).toBe(false);
@@ -95,12 +90,8 @@ describe("buildOverlayView", () => {
 
 describe("boardAnalysisLabel", () => {
   it("speaks only while the board is still being found", () => {
-    expect(boardAnalysisLabel(game({ stage: "detecting" }))).toBe(
-      "Finding the board…",
-    );
-    expect(boardAnalysisLabel(game({ stage: "calibrating" }))).toBe(
-      "Checking the board…",
-    );
+    expect(boardAnalysisLabel(game({ stage: "detecting" }))).toBe("Finding the board…");
+    expect(boardAnalysisLabel(game({ stage: "calibrating" }))).toBe("Checking the board…");
     expect(boardAnalysisLabel(game(), true)).toBeNull();
     expect(boardAnalysisLabel(game({ error: "nope" }))).toBeNull();
     expect(boardAnalysisLabel(game(), false)).toBe("Finding the board…");
@@ -146,7 +137,7 @@ describe("overlay extras", () => {
     expect(
       isOverlayReadable(
         game({
-          observation: observation(".........", 10, [], {
+          observation: observation(".........", 10, {
             quality: "misaligned",
           }),
         }),

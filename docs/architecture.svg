@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1090" viewBox="0 0 1400 1090" role="img" aria-labelledby="title desc">
   <title id="title">Paperplay: current camera agent and proposed multi-game services</title>
-  <desc id="desc">Live camera play uses a browser worker, local Node server, and an online model through OpenRouter. Completed camera games persist capture timing for the next game without manual corrections. Two optional corrected examples also persist per browser profile. Real-camera improvement remains unproven. Video and demo processing stay local. The diagram below the built summary is proposed: separate reader, coordinator, move chooser, approved rules, and evaluated learning releases. Automatic acceptance requires observed moves; user corrections are recorded separately.</desc>
+  <desc id="desc">Live camera play uses a browser worker, local NestJS backend, and a perception-only model through the OpenRouter SDK. Shared minimax chooses moves. Screen and browser speech communicate the pending instruction. Completed camera games persist capture timing for the next game without manual corrections. Two optional corrected examples also persist per browser profile. Real-camera improvement remains unproven. Video and demo processing stay local. The diagram below the built summary is proposed: separate reader, coordinator, move chooser, approved rules, and evaluated learning releases. Automatic acceptance requires observed moves; user corrections are recorded separately.</desc>
   <defs>
     <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#647168"/></marker>
     <marker id="orangeArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#b85330"/></marker>
@@ -20,8 +20,8 @@
   <text x="50" y="136" font-size="17" fill="#5f6e64">Preserve one contract as the system grows: observe the physical move before committing it.</text>
 
   <rect x="50" y="168" width="1295" height="76" rx="10" fill="#e8eee4"/>
-  <text x="72" y="194" class="eyebrow">BUILT / BROWSER + LOCAL SERVER + ONLINE MODEL</text>
-  <text x="72" y="214" font-size="15">Camera: local grid tracking → Node agent → OpenRouter model → rule checks → saved game and instructions.</text>
+  <text x="72" y="194" class="eyebrow">BUILT / REACT + MOBX / NESTJS / HOSTED READER</text>
+  <text x="72" y="214" font-size="15">Camera: grid tracking → stable crop → NestJS + OpenRouter SDK → board checks + minimax → screen and voice.</text>
   <text x="72" y="235" font-size="14">Completed game → save reading metrics → adjust next-game timing. No manual correction needed; improvement unproven.</text>
 
   <text x="50" y="271" class="eyebrow">01 / PROPOSED RUNTIME</text>

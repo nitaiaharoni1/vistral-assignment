@@ -1,6 +1,9 @@
-import { createSession } from "../../shared/session.helpers";
-import type { Board, Observation, Session } from "../../shared/types";
-import type { BoardAnalysis, VisibleMark } from "../../shared/agent-protocol";
+import { createSession } from "../../shared/session-helpers/session.helpers";
+import type { Board } from "../../shared/types";
+import type { Observation } from "../../shared/types";
+import type { Session } from "../../shared/types";
+import type { BoardAnalysis } from "../../shared/game-agent-protocol/game-agent-protocol";
+import type { VisibleMark } from "../../shared/game-agent-protocol/game-agent-protocol";
 
 export function marks(key: string): Board {
   return [...key].map((cell) => {
@@ -19,18 +22,11 @@ export function session(overrides: Partial<Session> = {}): Session {
 }
 
 export function times(start: number, end: number, step = 100): number[] {
-  return Array.from(
-    { length: Math.floor((end - start) / step) + 1 },
-    (_, index) => start + index * step,
-  );
+  return Array.from({ length: Math.floor((end - start) / step) + 1 }, (_, index) => start + index * step);
 }
 
-export function observation(
-  key: string,
-  timestamp: number,
-  hidden: number[] = [],
-  extra: Partial<Observation> = {},
-): Observation {
+export function observation(key: string, timestamp: number, extras: Partial<Observation> & { hidden?: number[] } = {}): Observation {
+  const { hidden = [], ...extra } = extras;
   const board = marks(key);
   return {
     timestamp,
@@ -55,10 +51,7 @@ function analysisMark(cell: string): VisibleMark {
   throw new Error(`Invalid analysis key character: ${cell}`);
 }
 
-export function analysis(
-  key: string,
-  extra: Partial<BoardAnalysis> = {},
-): BoardAnalysis {
+export function analysis(key: string, extra: Partial<BoardAnalysis> = {}): BoardAnalysis {
   return {
     cells: [...key].map((cell) => ({
       mark: analysisMark(cell),

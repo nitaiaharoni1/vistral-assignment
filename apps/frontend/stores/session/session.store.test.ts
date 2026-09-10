@@ -1,5 +1,8 @@
-import { describe, expect, it } from "vitest";
-import { marks, observation } from "../../../../tests/helpers/boards.ts";
+import { describe } from "vitest";
+import { expect } from "vitest";
+import { it } from "vitest";
+import { marks } from "../../../../tests/helpers/boards.ts";
+import { observation } from "../../../../tests/helpers/boards.ts";
 import { SessionStore } from "./session.store";
 
 describe("SessionStore", () => {

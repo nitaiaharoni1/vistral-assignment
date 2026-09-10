@@ -15,11 +15,7 @@ export default defineConfig({
         test: {
           name: "backend",
           environment: "node",
-          include: [
-            "shared/**/*.test.ts",
-            "apps/backend/**/*.test.ts",
-            "tests/unit/backend/**/*.test.ts",
-          ],
+          include: ["shared/**/*.test.ts", "apps/backend/**/*.test.ts", "tests/unit/backend/**/*.test.ts"],
           setupFiles: ["tests/setup/backend.ts"],
         },
       },
@@ -29,11 +25,7 @@ export default defineConfig({
         test: {
           name: "frontend",
           environment: "jsdom",
-          include: [
-            "apps/frontend/**/*.test.ts",
-            "apps/frontend/**/*.test.tsx",
-            "tests/unit/frontend/**/*.test.ts",
-          ],
+          include: ["apps/frontend/**/*.test.ts", "apps/frontend/**/*.test.tsx", "tests/unit/frontend/**/*.test.ts"],
           setupFiles: ["tests/setup/frontend.ts"],
         },
       },

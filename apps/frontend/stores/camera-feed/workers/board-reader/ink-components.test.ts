@@ -1,13 +1,14 @@
-import { describe, expect, it } from "vitest";
-import {
-  closeSmallGaps,
-  components,
-  enclosedCenter,
-  hasStructuredInk,
-  hasUnsupportedInk,
-  removeGridFragments,
-} from "./ink-components";
+import { describe } from "vitest";
+import { expect } from "vitest";
+import { it } from "vitest";
+import { closeSmallGaps } from "./ink-components";
+import { components } from "./ink-components";
+import { enclosedCenter } from "./ink-components";
+import { hasStructuredInk } from "./ink-components";
+import { hasUnsupportedInk } from "./ink-components";
+import { removeGridFragments } from "./ink-components";
 
+// Builds an ink mask from a grid of characters.
 function maskFrom(rows: string[]): Uint8Array {
   const size = rows[0].length;
   const mask = new Uint8Array(size * size);
@@ -65,15 +66,7 @@ describe("ink-components", () => {
   });
 
   it("closes a one-pixel hole in a 5x5 neighborhood", () => {
-    const mask = maskFrom([
-      ".......",
-      ".#####.",
-      ".#...#.",
-      ".#.#.#.",
-      ".#...#.",
-      ".#####.",
-      ".......",
-    ]);
+    const mask = maskFrom([".......", ".#####.", ".#...#.", ".#.#.#.", ".#...#.", ".#####.", "......."]);
     const closed = closeSmallGaps(mask, 7);
     expect(closed[3 * 7 + 3]).toBe(1);
   });

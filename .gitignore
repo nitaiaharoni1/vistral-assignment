@@ -11,3 +11,6 @@ output/
 .env
 .env.*
 .vscode/
+
+# Original 160 MB recording: ships in the zip, too large for GitHub
+vistral-nitai-demo-video.MP4

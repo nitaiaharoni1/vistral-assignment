@@ -1,5 +1,8 @@
-import { useEffect, useRef, type MouseEvent, type ReactNode } from "react";
-import { cn } from "../cn";
+import { useEffect } from "react";
+import { useRef } from "react";
+import type { MouseEvent } from "react";
+import type { ReactNode } from "react";
+import { cn } from "../cn/cn";
 
 const cardClass = cn(
   "w-[min(520px,calc(100%-32px-env(safe-area-inset-left)-env(safe-area-inset-right)))]",
@@ -9,12 +12,7 @@ const cardClass = cn(
   "motion-settle max-[600px]:rounded-[20px] max-[600px]:p-[22px]",
 );
 
-const sheetClass = cn(
-  cardClass,
-  "h-[min(500px,calc(100svh-32px-env(safe-area-inset-top)-env(safe-area-inset-bottom)))]",
-  "open:flex! open:flex-col! open:overflow-hidden",
-  "short-landscape:px-[22px] short-landscape:py-4",
-);
+const sheetClass = cn(cardClass, "h-[min(500px,calc(100svh-32px-env(safe-area-inset-top)-env(safe-area-inset-bottom)))]", "open:flex! open:flex-col! open:overflow-hidden", "short-landscape:px-[22px] short-landscape:py-4");
 
 type ModalLayout = "card" | "sheet";
 
@@ -28,16 +26,13 @@ type ModalProps = {
   children: ReactNode;
 };
 
+// True when the click landed outside the dialog box.
 function clickedBackdrop(event: MouseEvent<HTMLDialogElement>): boolean {
   const rect = event.currentTarget.getBoundingClientRect();
-  return (
-    event.clientX < rect.left ||
-    event.clientX > rect.right ||
-    event.clientY < rect.top ||
-    event.clientY > rect.bottom
-  );
+  return event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom;
 }
 
+// Returns card or sheet styles for the dialog.
 function layoutClass(layout: ModalLayout): string {
   switch (layout) {
     case "card":
@@ -51,15 +46,8 @@ function layoutClass(layout: ModalLayout): string {
   }
 }
 
-export function Modal({
-  open,
-  onClose,
-  labelledBy,
-  describedBy,
-  layout = "card",
-  closeOnBackdrop = false,
-  children,
-}: ModalProps) {
+// Shows a labeled dialog and closes it when asked.
+export function Modal({ open, onClose, labelledBy, describedBy, layout = "card", closeOnBackdrop = false, children }: ModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {

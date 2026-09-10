@@ -465,7 +465,7 @@ async function verify(file, settings, api, bundleHash) {
       }
     }
     let observation = calibration
-      ? api.analyzeFrame(image, calibration, time * 1000)
+      ? api.analyzeFrame({ image, calibration, timestamp: time * 1000 })
       : null;
     if (observation && session) session = api.observe(session, observation);
     if (session) {

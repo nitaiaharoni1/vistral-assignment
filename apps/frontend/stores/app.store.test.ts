@@ -1,7 +1,11 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe } from "vitest";
+import { expect } from "vitest";
+import { it } from "vitest";
+import { vi } from "vitest";
 import { marks } from "../../../tests/helpers/boards.ts";
 import { GameStore } from "./game/game.store";
 import { AppStore } from "./app.store";
+import { saveFile } from "./app.store";
 
 describe("AppStore", () => {
   it("opens and finishes the tutorial without starting a camera mid-game", () => {
@@ -65,14 +69,39 @@ describe("AppStore", () => {
     game.play.session.mode = "replay";
     const save = vi.fn();
     new AppStore(game, save).exportSession();
-    const payload = JSON.parse(
-      await (save.mock.calls[0][0] as Blob).text(),
-    ) as {
+    const payload = JSON.parse(await (save.mock.calls[0][0] as Blob).text()) as {
       versions: { perception: string; policy: string };
       assumptions: { mode?: string };
     };
     expect(payload.versions.perception).toBe("openrouter-board-v1");
     expect(payload.versions.policy).toBe("minimax-v1");
     expect(payload.assumptions.mode).toBe("replay");
+  });
+
+  it("toggles voice and writes a download link", () => {
+    const game = new GameStore();
+    const app = new AppStore(game, vi.fn());
+    const start = app.voiceOn;
+    app.toggleVoice();
+    expect(app.voiceOn).toBe(!start);
+    const click = vi.fn();
+    const link = {
+      href: "",
+      download: "",
+      click,
+      remove() {},
+    } as unknown as HTMLAnchorElement;
+    const create = vi.spyOn(document, "createElement").mockReturnValue(link);
+    const append = vi.spyOn(document.body, "append").mockImplementation(() => {});
+    vi.stubGlobal("URL", {
+      createObjectURL: () => "blob:save",
+      revokeObjectURL() {},
+    });
+    saveFile(new Blob(["log"]), "session.json");
+    expect(link.download).toBe("session.json");
+    expect(click).toHaveBeenCalledOnce();
+    create.mockRestore();
+    append.mockRestore();
+    vi.unstubAllGlobals();
   });
 });

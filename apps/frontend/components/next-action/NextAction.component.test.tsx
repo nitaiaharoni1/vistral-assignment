@@ -1,11 +1,16 @@
-import { render, screen } from "@testing-library/react";
+import { render } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { describe } from "vitest";
+import { expect } from "vitest";
+import { it } from "vitest";
+import { vi } from "vitest";
 import { marks } from "../../../../tests/helpers/boards.ts";
 import { GameStore } from "../../stores/game/game.store";
 import { GameStoreProvider } from "../../stores/game/helpers/game.helpers";
 import { NextAction } from "./NextAction.component";
 
+// Renders NextAction inside a game store provider.
 function renderAction(game: GameStore, onNewGame = vi.fn()) {
   return {
     onNewGame,
@@ -20,9 +25,7 @@ function renderAction(game: GameStore, onNewGame = vi.fn()) {
 describe("NextAction", () => {
   it("asks for the first X", () => {
     renderAction(new GameStore());
-    expect(
-      screen.getByRole("heading", { name: "Your turn. Draw X." }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Your turn. Draw X." })).toBeInTheDocument();
     expect(screen.getByText("Choose an empty square.")).toBeInTheDocument();
   });
 
@@ -42,8 +45,6 @@ describe("NextAction", () => {
     game.stage = "playing";
     game.preparingBoard = true;
     renderAction(game);
-    expect(
-      screen.getByRole("heading", { name: "Draw a 3×3 grid." }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Draw a 3×3 grid." })).toBeInTheDocument();
   });
 });

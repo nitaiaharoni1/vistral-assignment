@@ -1,9 +1,12 @@
 import { observer } from "mobx-react-lite";
-import { GridFour, Circle, X } from "@phosphor-icons/react";
+import { GridFour } from "@phosphor-icons/react";
+import { Circle } from "@phosphor-icons/react";
+import { X } from "@phosphor-icons/react";
 import { useGameStore } from "../../../../stores/game/helpers/game.helpers";
 import { DrawGuideIcon } from "../../../shared/draw-guide-icon/DrawGuideIcon.component";
 import { overlayLegendClass } from "../../camera-workspace.classes";
 
+// Shows the overlay legend while a live game is running.
 export const CameraFooter = observer(function CameraFooter() {
   const game = useGameStore();
   if (!game.inGame || game.blocked) return null;

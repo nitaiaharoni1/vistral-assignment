@@ -4,21 +4,12 @@ type TutorialCopyProps = {
   step: number;
 };
 
+// Shows the how-to text for the first two steps.
 export function TutorialCopy({ step }: TutorialCopyProps) {
   return (
     <div>
-      {step === 0 && (
-        <p className={tutorialCopyClass}>
-          Draw four dark lines on light paper. Show the whole empty grid and
-          hold it still. I’ll find and read it automatically.
-        </p>
-      )}
-      {step === 1 && (
-        <p className={tutorialCopyClass}>
-          Draw one X and lift your hand. Wait for me to choose a square, then
-          draw O there. Keep each new mark visible until it’s confirmed.
-        </p>
-      )}
+      {step === 0 && <p className={tutorialCopyClass}>Draw four dark lines on light paper. Show the whole empty grid and hold it still. I’ll find and read it automatically.</p>}
+      {step === 1 && <p className={tutorialCopyClass}>Draw one X and lift your hand. Wait for me to choose a square, then draw O there. Keep each new mark visible until it’s confirmed.</p>}
     </div>
   );
 }

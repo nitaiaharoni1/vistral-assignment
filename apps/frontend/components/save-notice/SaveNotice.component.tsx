@@ -6,6 +6,7 @@ type SaveNoticeProps = {
   onDismiss: () => void;
 };
 
+// Shows a dismissible toast when a session log is ready.
 export function SaveNotice({ notice, onDismiss }: SaveNoticeProps) {
   return (
     <div

@@ -1,9 +1,29 @@
-import type { Board, Outcome } from "./board";
+import type { Board } from "./board";
+import type { Outcome } from "./board";
+
+export type SessionEventKind =
+  | "start"
+  | "board-imported"
+  | "human-move"
+  | "ai-confirmed"
+  | "observed-move"
+  | "ai-intent"
+  | "ai-placement-changed"
+  | "result"
+  | "recovery"
+  | "recovered"
+  | "board-sync"
+  | "pause"
+  | "resume"
+  | "user-correction"
+  | "agent-request"
+  | "agent-analysis"
+  | "capture-feedback";
 
 export type SessionEvent = {
   id: string;
   at: number;
-  kind: string;
+  kind: SessionEventKind;
   message: string;
   cell?: number;
   mark?: "X" | "O";

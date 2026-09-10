@@ -1,0 +1,12 @@
+node_modules
+dist
+output
+.impeccable
+package-lock.json
+*.tsbuildinfo
+.paperplay
+*.local
+*.zip
+*.MP4
+*.mp4
+*.webp

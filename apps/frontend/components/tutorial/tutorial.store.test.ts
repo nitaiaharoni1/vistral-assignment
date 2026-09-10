@@ -1,5 +1,8 @@
-import { describe, expect, it } from "vitest";
-import { TUTORIAL_TITLES, TutorialStore } from "./tutorial.store";
+import { describe } from "vitest";
+import { expect } from "vitest";
+import { it } from "vitest";
+import { TUTORIAL_TITLES } from "./tutorial.store";
+import { TutorialStore } from "./tutorial.store";
 
 describe("TutorialStore", () => {
   it("walks forward and back without leaving the title list", () => {

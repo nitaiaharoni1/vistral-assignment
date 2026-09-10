@@ -114,8 +114,7 @@
 
   body {
     min-width: 320px;
-    padding: env(safe-area-inset-top) env(safe-area-inset-right)
-      env(safe-area-inset-bottom) env(safe-area-inset-left);
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   }
 
   button,
@@ -125,13 +124,28 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  button:disabled {
-    opacity: 0.42;
+  button:not(:disabled),
+  a[href],
+  summary,
+  label,
+  select,
+  [role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [aria-disabled="true"] {
     cursor: not-allowed;
   }
 
+  button:disabled {
+    opacity: 0.42;
+  }
+
   button,
-  a {
+  a,
+  summary,
+  select {
     transition:
       background-color 180ms,
       color 180ms,

@@ -1,19 +1,20 @@
-import { describe, expect, it } from "vitest";
+import { describe } from "vitest";
+import { expect } from "vitest";
+import { it } from "vitest";
 import type { Corners } from "../../../../types";
 import { BOARD_SIZE } from "./board.constants";
-import {
-  boardCorners,
-  boardTransform,
-  luma,
-  luminance,
-  median,
-  normalize,
-  paperLevels,
-  projectBoard,
-  rectify,
-  validateImage,
-} from "./board-image";
+import { boardCorners } from "./board-image";
+import { boardTransform } from "./board-image";
+import { luma } from "./board-image";
+import { luminance } from "./board-image";
+import { median } from "./board-image";
+import { normalize } from "./board-image";
+import { paperLevels } from "./board-image";
+import { projectBoard } from "./board-image";
+import { rectify } from "./board-image";
+import { validateImage } from "./board-image";
 
+// Builds a flat gray test image.
 function grayImage(width: number, height: number, value = 200): ImageData {
   const data = new Uint8ClampedArray(width * height * 4);
   for (let index = 0; index < data.length; index += 4) {
@@ -27,9 +28,7 @@ function grayImage(width: number, height: number, value = 200): ImageData {
 
 describe("board-image helpers", () => {
   it("weights luma toward green", () => {
-    expect(luma([10, 20, 30, 255], 0)).toBeCloseTo(
-      10 * 0.2126 + 20 * 0.7152 + 30 * 0.0722,
-    );
+    expect(luma([10, 20, 30, 255], 0)).toBeCloseTo(10 * 0.2126 + 20 * 0.7152 + 30 * 0.0722);
   });
 
   it("returns the median of an odd or even list", () => {

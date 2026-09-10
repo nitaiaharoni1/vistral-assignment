@@ -1,64 +1,55 @@
-import { describe, expect, it } from "vitest";
-import { pauseSession, resumeSession } from "@shared/session.helpers";
-import { resumeBoard } from "@shared/accept-session";
-import {
-  keyOf,
-  marks,
-  observation,
-  times,
-} from "../../../../../tests/helpers/boards.ts";
+import { describe } from "vitest";
+import { expect } from "vitest";
+import { it } from "vitest";
+import { pauseSession } from "@shared/session-helpers/session.helpers";
+import { resumeSession } from "@shared/session-helpers/session.helpers";
+import { resumeBoard } from "@shared/accept-session/accept-session";
+import { keyOf } from "../../../../../tests/helpers/boards.ts";
+import { marks } from "../../../../../tests/helpers/boards.ts";
+import { observation } from "../../../../../tests/helpers/boards.ts";
+import { times } from "../../../../../tests/helpers/boards.ts";
 import { observe } from "./observation.helpers";
 
 const OPENING = ".O.XXO...";
 const FINAL = ".OXXXOX.O";
 
-function feed(
-  start: ReturnType<typeof resumeBoard>,
-  key: string,
-  stamps: number[],
-  hidden: number[] = [],
-) {
-  return stamps.reduce(
-    (state, timestamp) => observe(state, observation(key, timestamp, hidden)),
-    start,
-  );
+// Feeds a sequence of observations into a session.
+function feed({ start, key, stamps, hidden = [] }: { start: ReturnType<typeof resumeBoard>; key: string; stamps: number[]; hidden?: number[] }) {
+  return stamps.reduce((state, timestamp) => observe(state, observation(key, timestamp, { hidden })), start);
 }
 
 describe("observe", () => {
   it("confirms a stable new X in live play", () => {
     let state = resumeBoard(marks("........."));
-    state = feed(state, "....X....", times(0, 600));
+    state = feed({ start: state, key: "....X....", stamps: times(0, 600) });
     expect(keyOf(state.board)).toBe("....X....");
     expect(state.phase).toBe("draw-ai");
   });
 
   it("ignores a timestamp that does not move forward", () => {
-    const first = observe(
-      resumeBoard(marks(".........")),
-      observation("....X....", 10),
-    );
+    const first = observe(resumeBoard(marks(".........")), observation("....X....", 10));
     const again = observe(first, observation("....X....", 10));
     expect(again).toBe(first);
   });
 
   it("does not finish a replay from a partial last board", () => {
-    const state = feed(
-      resumeBoard(marks(OPENING), "replay"),
-      FINAL,
-      times(0, 2000),
-      [0],
-    );
+    const state = feed({
+      start: resumeBoard(marks(OPENING), "replay"),
+      key: FINAL,
+      stamps: times(0, 2000),
+      hidden: [0],
+    });
     expect(keyOf(state.board)).toBe(OPENING);
     expect(state.phase).not.toBe("finished");
   });
 
   it("syncs a fully visible legal replay board after a 500 ms window", () => {
-    let state = feed(
-      resumeBoard(marks(OPENING), "replay"),
-      FINAL,
-      times(0, 600),
-      [0],
-    );
+    let state = feed({
+      start: resumeBoard(marks(OPENING), "replay"),
+      key: FINAL,
+      stamps: times(0, 600),
+      hidden: [0],
+    });
     expect(keyOf(state.board)).toBe(OPENING);
     state = observe(state, observation(FINAL, 700));
     expect(keyOf(state.board)).toBe(FINAL);
@@ -66,12 +57,12 @@ describe("observe", () => {
   });
 
   it("cannot confirm replay additions in 499 ms", () => {
-    let state = feed(
-      resumeBoard(marks(OPENING), "replay"),
-      FINAL,
-      times(0, 450, 50),
-      [0],
-    );
+    let state = feed({
+      start: resumeBoard(marks(OPENING), "replay"),
+      key: FINAL,
+      stamps: times(0, 450, 50),
+      hidden: [0],
+    });
     state = observe(state, observation(FINAL, 499));
     expect(keyOf(state.board)).toBe(OPENING);
     state = observe(state, observation(FINAL, 500));
@@ -79,50 +70,50 @@ describe("observe", () => {
   });
 
   it("rejects an illegal accumulated replay board", () => {
-    const state = feed(
-      resumeBoard(marks(OPENING), "replay"),
-      ".OXXXOXOO",
-      times(0, 700),
-    );
+    const state = feed({
+      start: resumeBoard(marks(OPENING), "replay"),
+      key: ".OXXXOXOO",
+      stamps: times(0, 700),
+    });
     expect(keyOf(state.board)).toBe(OPENING);
     expect(state.recoveryReason).toBeTruthy();
   });
 
   it("discards evidence across pause, darkness, and a stale gap", () => {
     const opening = resumeBoard(marks(OPENING), "replay");
-    let paused = feed(opening, FINAL, times(0, 600), [0]);
-    paused = feed(resumeSession(pauseSession(paused)), FINAL, times(700, 1100));
+    let paused = feed({ start: opening, key: FINAL, stamps: times(0, 600), hidden: [0] });
+    paused = feed({ start: resumeSession(pauseSession(paused)), key: FINAL, stamps: times(700, 1100) });
     expect(keyOf(paused.board)).toBe(OPENING);
-    let dark = feed(opening, FINAL, times(0, 600), [0]);
-    dark = observe(dark, observation(FINAL, 650, [], { quality: "dark" }));
-    dark = feed(dark, FINAL, times(700, 1100));
+    let dark = feed({ start: opening, key: FINAL, stamps: times(0, 600), hidden: [0] });
+    dark = observe(dark, observation(FINAL, 650, { quality: "dark" }));
+    dark = feed({ start: dark, key: FINAL, stamps: times(700, 1100) });
     expect(keyOf(dark.board)).toBe(OPENING);
-    let stale = feed(opening, FINAL, times(0, 600), [0]);
+    let stale = feed({ start: opening, key: FINAL, stamps: times(0, 600), hidden: [0] });
     stale = observe(stale, observation(FINAL, 2200));
     expect(keyOf(stale.board)).toBe(OPENING);
   });
 
   it("rejects several new live marks and a misplaced O", () => {
-    const extras = feed(resumeBoard(marks(OPENING)), FINAL, times(0, 600), [0]);
+    const extras = feed({
+      start: resumeBoard(marks(OPENING)),
+      key: FINAL,
+      stamps: times(0, 600),
+      hidden: [0],
+    });
     expect(extras.recoveryReason).toBeTruthy();
     const start = resumeBoard(marks(".O.XX...."));
-    const wrong = start.board.map((mark, cell) =>
-      mark === null && cell !== start.pendingMove ? "O" : mark,
-    );
+    const wrong = start.board.map((mark, cell) => (mark === null && cell !== start.pendingMove ? "O" : mark));
     const key = wrong.map((mark) => mark ?? ".").join("");
-    const misplaced = feed(start, key, times(0, 600));
+    const misplaced = feed({ start, key, stamps: times(0, 600) });
     expect(keyOf(misplaced.board)).toBe(".O.XX....");
     expect(misplaced.recoveryReason).toBeTruthy();
   });
 
   it("keeps confirmed marks when the page later looks empty", () => {
     let state = resumeBoard(marks(FINAL), "replay");
-    state = feed(state, ".........", times(0, 600));
+    state = feed({ start: state, key: ".........", stamps: times(0, 600) });
     expect(keyOf(state.board)).toBe(FINAL);
-    state = observe(
-      state,
-      observation(".........", 700, [], { quality: "misaligned" }),
-    );
+    state = observe(state, observation(".........", 700, { quality: "misaligned" }));
     expect(keyOf(state.board)).toBe(FINAL);
   });
 
@@ -130,11 +121,11 @@ describe("observe", () => {
     const postWin = marks(FINAL);
     postWin[0] = "O";
     postWin[7] = "X";
-    const state = feed(
-      resumeBoard(marks(FINAL), "replay"),
-      postWin.map((mark) => mark ?? ".").join(""),
-      times(0, 700),
-    );
+    const state = feed({
+      start: resumeBoard(marks(FINAL), "replay"),
+      key: postWin.map((mark) => mark ?? ".").join(""),
+      stamps: times(0, 700),
+    });
     expect(keyOf(state.board)).toBe(FINAL);
   });
 
@@ -142,7 +133,7 @@ describe("observe", () => {
     const start = resumeBoard(marks("X........"));
     const next = observe(
       start,
-      observation("X........", 10, [], {
+      observation("X........", 10, {
         reacquired: true,
         quality: "dark",
       }),
@@ -153,7 +144,7 @@ describe("observe", () => {
 
   it("rejects a stable unexpected O on X's turn", () => {
     let state = resumeBoard(marks("........."));
-    state = feed(state, "O........", times(0, 600));
+    state = feed({ start: state, key: "O........", stamps: times(0, 600) });
     expect(keyOf(state.board)).toBe(".........");
     expect(state.recoveryReason).toMatch(/needs X/);
   });

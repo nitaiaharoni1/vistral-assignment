@@ -1,4 +1,4 @@
-import { cn } from "../../../shared/cn";
+import { cn } from "../../../shared/cn/cn";
 
 const tutorialVisualClass = cn(
   "my-2.5 mb-[26px] flex h-[180px] items-center justify-center rounded-2xl bg-accent-wash text-accent",
@@ -7,8 +7,7 @@ const tutorialVisualClass = cn(
   "short-landscape:mb-4 short-landscape:h-[104px] short-landscape:[&_svg]:h-24",
 );
 
-const inkMarkClass =
-  "motion-settle origin-center animate-ink-confirmed [transform-box:fill-box]";
+const inkMarkClass = "motion-settle origin-center animate-ink-confirmed [transform-box:fill-box]";
 
 const EMPTY_GRID_CORNERS = [
   { x: 68, y: 18, delay: "" },
@@ -21,6 +20,7 @@ type TutorialVisualProps = {
   step: number;
 };
 
+// Returns the spoken description for the current visual.
 function visualLabel(step: number): string {
   if (step === 0) {
     return "An empty three by three grid without row letters or column numbers.";
@@ -28,17 +28,16 @@ function visualLabel(step: number): string {
   return "A solid X has been seen in the top-left square. The dashed O in the center is suggested, not yet seen.";
 }
 
+// Draws the four corner dots on an empty grid.
 function EmptyGridCorners() {
   return EMPTY_GRID_CORNERS.map((corner) => (
-    <g
-      key={`${corner.x}-${corner.y}`}
-      className={cn(inkMarkClass, corner.delay)}
-    >
+    <g key={`${corner.x}-${corner.y}`} className={cn(inkMarkClass, corner.delay)}>
       <circle cx={corner.x} cy={corner.y} r="6" fill="currentColor" />
     </g>
   ));
 }
 
+// Draws the sample X and suggested O on the grid.
 function SeenMarks() {
   return (
     <g fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
@@ -52,17 +51,12 @@ function SeenMarks() {
   );
 }
 
+// Shows the step illustration, or nothing after step 1.
 export function TutorialVisual({ step }: TutorialVisualProps) {
   if (step >= 2) return null;
   return (
     <div className={tutorialVisualClass}>
-      <svg
-        width="280"
-        height="180"
-        viewBox="0 0 280 180"
-        role="img"
-        aria-label={visualLabel(step)}
-      >
+      <svg width="280" height="180" viewBox="0 0 280 180" role="img" aria-label={visualLabel(step)}>
         <g fill="none" stroke="currentColor" strokeWidth="1.5">
           <rect x="68" y="18" width="144" height="144" />
           <path d="M116 18v144 M164 18v144 M68 66h144 M68 114h144" />

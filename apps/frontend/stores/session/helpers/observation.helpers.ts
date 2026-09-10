@@ -1,90 +1,74 @@
-import type { Board, Observation, Session } from "../../../types";
-import {
-  updateCandidates,
-  advanceRecognizedTurn,
-} from "./cell-recognition.helpers";
-import { addedCells, checkLegality, getOutcome } from "@shared/board.helpers";
-import {
-  MAX_OBSERVATION_GAP_MS,
-  MAX_CELL_READING_GAP_MS,
-  cellVisible,
-  REQUIRED_STABLE_FRAMES,
-  STABLE_WINDOW_MS,
-  checkVisibleChange,
-  damagedCellMessage,
-  expectedMark,
-  instruction,
-  isUnexpectedMark,
-  rejectChange,
-  resetStability,
-  stableCell,
-  withUnverifiedPage,
-  cellLabel,
-} from "@shared/session.helpers";
-import { acceptStableBoard, confirmMove } from "@shared/accept-session";
+import type { Board } from "../../../types";
+import type { Observation } from "../../../types";
+import type { Session } from "../../../types";
+import { updateCandidates } from "./cell-recognition.helpers";
+import { advanceRecognizedTurn } from "./cell-recognition.helpers";
+import { addedCells } from "@shared/board-helpers/board.helpers";
+import { checkLegality } from "@shared/board-helpers/board.helpers";
+import { getOutcome } from "@shared/board-helpers/board.helpers";
+import { MAX_OBSERVATION_GAP_MS } from "@shared/session-helpers/session.helpers";
+import { MAX_CELL_READING_GAP_MS } from "@shared/session-helpers/session.helpers";
+import { cellVisible } from "@shared/session-helpers/session.helpers";
+import { REQUIRED_STABLE_FRAMES } from "@shared/session-helpers/session.helpers";
+import { STABLE_WINDOW_MS } from "@shared/session-helpers/session.helpers";
+import { checkVisibleChange } from "@shared/session-helpers/session.helpers";
+import { damagedCellMessage } from "@shared/session-helpers/session.helpers";
+import { expectedMark } from "@shared/session-helpers/session.helpers";
+import { instruction } from "@shared/session-helpers/session.helpers";
+import { isUnexpectedMark } from "@shared/session-helpers/session.helpers";
+import { rejectChange } from "@shared/session-helpers/session.helpers";
+import { resetStability } from "@shared/session-helpers/session.helpers";
+import { stableCell } from "@shared/session-helpers/session.helpers";
+import { withUnverifiedPage } from "@shared/session-helpers/session.helpers";
+import { cellLabel } from "@shared/session-helpers/session.helpers";
+import { acceptStableBoard } from "@shared/accept-session/accept-session";
+import { confirmMove } from "@shared/accept-session/accept-session";
 
-export function checkPartialDamage(
-  session: Session,
-  observation: Observation,
-  visible: boolean[],
-  at: number,
-): Session | null {
-  const damagedCells = session.board.flatMap((mark, index) =>
-    mark !== null && visible[index] && observation.cells[index].mark !== mark
-      ? [index]
-      : [],
-  );
+type ObservationFrame = {
+  session: Session;
+  observation: Observation;
+  visible: boolean[];
+  at: number;
+};
+
+type ObservationCheck = ObservationFrame & { localReadings: boolean };
+
+// Rejects a visible mark that no longer matches the board.
+export function checkPartialDamage({ session, observation, visible, at }: ObservationFrame): Session | null {
+  const damagedCells = session.board.flatMap((mark, index) => (mark !== null && visible[index] && observation.cells[index].mark !== mark ? [index] : []));
   if (!damagedCells.length) return null;
-  const stableDamage = damagedCells.find((index) =>
-    stableCell(session.cellCandidates[index], at),
-  );
+  const stableDamage = damagedCells.find((index) => stableCell(session.cellCandidates[index], at));
   const damaged = stableDamage ?? damagedCells[0];
-  return checkVisibleChange(
+  return checkVisibleChange({
     session,
-    damagedCellMessage(session, damaged),
+    reason: damagedCellMessage(session, damaged),
     at,
-    stableDamage !== undefined,
-  );
+    stable: stableDamage !== undefined,
+  });
 }
 
-function visibleAdditions(
-  session: Session,
-  observation: Observation,
-  visible: boolean[],
-): number[] {
-  return observation.cells.flatMap((cell, index) =>
-    visible[index] && cell.mark !== null && session.board[index] === null
-      ? [index]
-      : [],
-  );
+// Lists newly visible marks on empty squares.
+function visibleAdditions(session: Session, observation: Observation, visible: boolean[]): number[] {
+  return observation.cells.flatMap((cell, index) => (visible[index] && cell.mark !== null && session.board[index] === null ? [index] : []));
 }
 
-function checkMultipleAdditions(
-  session: Session,
-  observation: Observation,
-  additions: number[],
-  at: number,
-): Session {
-  const stableAdditions = additions.filter((index) =>
-    stableCell(session.cellCandidates[index], at),
-  );
-  const wrongAddition = stableAdditions.some((index) =>
-    isUnexpectedMark(session, observation.cells[index].mark, index),
-  );
-  return checkVisibleChange(
+// Rejects several new marks seen at once.
+function checkMultipleAdditions({ session, observation, additions, at }: ObservationFrame & { additions: number[] }): Session {
+  const stableAdditions = additions.filter((index) => stableCell(session.cellCandidates[index], at));
+  const wrongAddition = stableAdditions.some((index) => isUnexpectedMark(session, observation.cells[index].mark, index));
+  return checkVisibleChange({
     session,
-    session.mode === "replay"
-      ? `The recording shows ${additions.length} new marks at once. Waiting for a clear view of the whole board to verify it.`
-      : `I can see ${additions.length} new marks. Show the whole grid and leave only the expected move.`,
+    reason:
+      session.mode === "replay"
+        ? `The recording shows ${additions.length} new marks at once. Waiting for a clear view of the whole board to verify it.`
+        : `I can see ${additions.length} new marks. Show the whole grid and leave only the expected move.`,
     at,
-    session.mode === "play" && (stableAdditions.length > 1 || wrongAddition),
-  );
+    stable: session.mode === "play" && (stableAdditions.length > 1 || wrongAddition),
+  });
 }
 
-function unexpectedAdditionMessage(
-  session: Session,
-  expected: "X" | "O",
-): string {
+// Explains an unexpected new mark.
+function unexpectedAdditionMessage(session: Session, expected: "X" | "O"): string {
   if (session.mode === "replay") {
     return `The recording shows an unexpected mark. This turn needs one ${expected}.`;
   }
@@ -94,15 +78,10 @@ function unexpectedAdditionMessage(
   return "This turn needs one X. Remove the unexpected O and show the whole grid.";
 }
 
-function tryConfirmPartialMove(
-  session: Session,
-  index: number,
-  mark: "X" | "O",
-  at: number,
-): Session | null {
+// Confirms one stable legal new mark.
+function tryConfirmPartialMove({ session, index, mark, at }: { session: Session; index: number; mark: "X" | "O"; at: number }): Session | null {
   const candidate = session.cellCandidates[index];
-  if (session.recoveryReason !== null || !stableCell(candidate, at))
-    return null;
+  if (session.recoveryReason !== null || !stableCell(candidate, at)) return null;
   const board = [...session.board];
   board[index] = mark;
   const legality = checkLegality(board);
@@ -110,68 +89,50 @@ function tryConfirmPartialMove(
   if (getOutcome(board).outcome !== null) {
     return {
       ...withUnverifiedPage(session),
-      message:
-        session.mode === "replay"
-          ? "The final move is visible. Waiting for a clear view of the whole grid to confirm the recorded result."
-          : "The final move is visible. Clear the whole grid to confirm the result.",
+      message: session.mode === "replay" ? "The final move is visible. Waiting for a clear view of the whole grid to confirm the recorded result." : "The final move is visible. Clear the whole grid to confirm the result.",
     };
   }
-  return withUnverifiedPage(confirmMove(session, board, index, at));
+  return withUnverifiedPage(confirmMove({ session, board, cell: index, at }));
 }
 
-function checkSingleAddition(
-  session: Session,
-  observation: Observation,
-  index: number,
-  at: number,
-): Session | null {
+// Checks one newly visible mark.
+function checkSingleAddition({ session, observation, index, at }: { session: Session; observation: Observation; index: number; at: number }): Session | null {
   const mark = observation.cells[index].mark as "X" | "O";
   const expected = expectedMark(session);
   if (session.phase === "finished") {
-    return checkVisibleChange(
+    return checkVisibleChange({
       session,
-      "The paper changed after the game ended. Restore the confirmed grid, or start a new game.",
+      reason: "The paper changed after the game ended. Restore the confirmed grid, or start a new game.",
       at,
-      stableCell(session.cellCandidates[index], at),
-    );
+      stable: stableCell(session.cellCandidates[index], at),
+    });
   }
   if (isUnexpectedMark(session, mark, index)) {
-    return checkVisibleChange(
+    return checkVisibleChange({
       session,
-      unexpectedAdditionMessage(session, expected),
+      reason: unexpectedAdditionMessage(session, expected),
       at,
-      stableCell(session.cellCandidates[index], at),
-    );
+      stable: stableCell(session.cellCandidates[index], at),
+    });
   }
-  return tryConfirmPartialMove(session, index, mark, at);
+  return tryConfirmPartialMove({ session, index, mark, at });
 }
 
-export function checkPartialAdditions(
-  session: Session,
-  observation: Observation,
-  visible: boolean[],
-  at: number,
-): Session | null {
+// Handles newly visible marks on a partial board.
+export function checkPartialAdditions({ session, observation, visible, at }: ObservationFrame): Session | null {
   const additions = visibleAdditions(session, observation, visible);
   if (additions.length > 1) {
-    return checkMultipleAdditions(session, observation, additions, at);
+    return checkMultipleAdditions({ session, observation, visible, additions, at });
   }
   const index = additions[0];
   if (index === undefined) return null;
-  return checkSingleAddition(session, observation, index, at);
+  return checkSingleAddition({ session, observation, index, at });
 }
 
+// Advances time or drops a stale or paused frame.
 function applyTiming(session: Session, at: number): Session | null {
-  if (
-    session.paused ||
-    !Number.isFinite(at) ||
-    at < 0 ||
-    (session.lastObservationAt !== null && at <= session.lastObservationAt)
-  )
-    return null;
-  const staleGap =
-    session.lastObservationAt !== null &&
-    at - session.lastObservationAt > MAX_OBSERVATION_GAP_MS;
+  if (session.paused || !Number.isFinite(at) || at < 0 || (session.lastObservationAt !== null && at <= session.lastObservationAt)) return null;
+  const staleGap = session.lastObservationAt !== null && at - session.lastObservationAt > MAX_OBSERVATION_GAP_MS;
   let next: Session = {
     ...session,
     lastObservationAt: at,
@@ -185,78 +146,47 @@ function applyTiming(session: Session, at: number): Session | null {
   return next;
 }
 
+// True when every square has a local reading.
 function hasLocalReadings(observation: Observation): boolean {
-  return (
-    observation.cells.length === 9 &&
-    observation.cells.every((cell) => typeof cell.readable === "boolean")
-  );
+  return observation.cells.length === 9 && observation.cells.every((cell) => typeof cell.readable === "boolean");
 }
 
-function isGloballyBlocked(
-  observation: Observation,
-  localReadings: boolean,
-): boolean {
+// True when the whole page cannot be read.
+function isGloballyBlocked(observation: Observation, localReadings: boolean): boolean {
   if (observation.quality === "dark") return true;
   if (observation.quality === "misaligned") return true;
   if (observation.cells.length !== 9) return true;
   return !localReadings && observation.quality !== "good";
 }
 
-function isInterruptQuality(
-  session: Session,
-  observation: Observation,
-  localReadings: boolean,
-): boolean {
+// True when quality should interrupt the board check.
+function isInterruptQuality(session: Session, observation: Observation, localReadings: boolean): boolean {
   if (session.boardCheck === "interrupted") return true;
   if (observation.quality === "dark") return true;
   if (observation.cells.length !== 9) return true;
-  return (
-    !localReadings &&
-    observation.quality !== "good" &&
-    observation.quality !== "misaligned"
-  );
+  return !localReadings && observation.quality !== "good" && observation.quality !== "misaligned";
 }
 
-function applyBlockedQuality(
-  session: Session,
-  observation: Observation,
-  interrupt: boolean,
-): Session {
+// Resets stability after a blocked or reacquired page.
+function applyBlockedQuality(session: Session, observation: Observation, interrupt: boolean): Session {
   const reset = resetStability(withUnverifiedPage(session));
   if (!interrupt && !observation.reacquired) {
-    reset.cellCandidates = session.cellCandidates.map((candidate) =>
-      candidate &&
-      observation.timestamp - candidate.lastSeen <= MAX_CELL_READING_GAP_MS
-        ? candidate
-        : null,
-    );
+    reset.cellCandidates = session.cellCandidates.map((candidate) => (candidate && observation.timestamp - candidate.lastSeen <= MAX_CELL_READING_GAP_MS ? candidate : null));
   }
   return {
     ...reset,
-    boardCheck: interrupt
-      ? "interrupted"
-      : observation.reacquired === true
-        ? "verifying-grid"
-        : "finding-grid",
-    message: observation.reacquired
-      ? "Grid found again. Checking the previously observed marks before continuing."
-      : observation.message || "Keep the whole grid visible in good light.",
+    boardCheck: interrupt ? "interrupted" : observation.reacquired === true ? "verifying-grid" : "finding-grid",
+    message: observation.reacquired ? "Grid found again. Checking the previously observed marks before continuing." : observation.message || "Keep the whole grid visible in good light.",
   };
 }
 
-function shouldStopAfterBlock(
-  observation: Observation,
-  localReadings: boolean,
-): boolean {
-  return (
-    !observation.reacquired || observation.quality === "dark" || !localReadings
-  );
+// True when a blocked frame should stop further work.
+function shouldStopAfterBlock(observation: Observation, localReadings: boolean): boolean {
+  return !observation.reacquired || observation.quality === "dark" || !localReadings;
 }
 
-function applyQuality(
-  session: Session,
-  observation: Observation,
-): { session: Session; localReadings: boolean; done: boolean } {
+// Updates the session for the current frame quality.
+function applyQuality(session: Session, observation: Observation): { session: Session; localReadings: boolean; done: boolean } {
   const localReadings = hasLocalReadings(observation);
   const globallyBlocked = isGloballyBlocked(observation, localReadings);
   let next = session;
@@ -267,53 +197,30 @@ function applyQuality(
       return { session: next, localReadings, done: true };
     }
   }
-  if (
-    (next.boardCheck === "finding-grid" ||
-      next.boardCheck === "verifying-grid") &&
-    !globallyBlocked &&
-    localReadings
-  ) {
+  if ((next.boardCheck === "finding-grid" || next.boardCheck === "verifying-grid") && !globallyBlocked && localReadings) {
     next = { ...next, boardCheck: "verifying-grid" };
   }
   return { session: next, localReadings, done: false };
 }
 
-function applyReadableBoard(
-  session: Session,
-  observed: Board,
-  at: number,
-): Session {
+// Tracks a fully visible candidate board.
+function applyReadableBoard(session: Session, observed: Board, at: number): Session {
   const key = observed.map((mark) => mark ?? "_").join("");
-  const next = observed.every((mark, cell) => mark === session.board[cell])
-    ? session
-    : withUnverifiedPage(session);
+  const next = observed.every((mark, cell) => mark === session.board[cell]) ? session : withUnverifiedPage(session);
   const sameCandidate = key === next.candidateKey;
   return {
     ...next,
     candidateKey: key,
     candidateSeenAt: at,
-    stableFrames: sameCandidate
-      ? Math.min(REQUIRED_STABLE_FRAMES, next.stableFrames + 1)
-      : 1,
+    stableFrames: sameCandidate ? Math.min(REQUIRED_STABLE_FRAMES, next.stableFrames + 1) : 1,
     stableSince: sameCandidate ? next.stableSince : at,
   };
 }
 
-function applyUnreadableBoard(
-  session: Session,
-  observation: Observation,
-  visible: boolean[],
-  at: number,
-): Session {
-  const recent =
-    session.candidateSeenAt !== null &&
-    at - session.candidateSeenAt <= MAX_CELL_READING_GAP_MS;
-  const compatible =
-    session.candidateKey !== null &&
-    observation.cells.every(
-      (cell, index) =>
-        !visible[index] || (cell.mark ?? "_") === session.candidateKey![index],
-    );
+// Holds or clears a candidate when squares are hidden.
+function applyUnreadableBoard({ session, observation, visible, at }: ObservationFrame): Session {
+  const recent = session.candidateSeenAt !== null && at - session.candidateSeenAt <= MAX_CELL_READING_GAP_MS;
+  const compatible = session.candidateKey !== null && observation.cells.every((cell, index) => !visible[index] || (cell.mark ?? "_") === session.candidateKey![index]);
   return {
     ...withUnverifiedPage(session),
     ...(recent && compatible
@@ -327,122 +234,73 @@ function applyUnreadableBoard(
   };
 }
 
-function hasVerifiedChanges(
-  session: Session,
-  observed: Board,
-  additions: number[],
-  localReadings: boolean,
-  at: number,
-): boolean {
+// True when each new mark is stable and legal.
+function hasVerifiedChanges({ session, observed, additions, localReadings, at }: { session: Session; observed: Board; additions: number[]; localReadings: boolean; at: number }): boolean {
   if (!localReadings) return false;
   if (session.boardCheck === "interrupted") return false;
   if (session.recoveryReason !== null) return false;
-  if (
-    !session.board.every(
-      (mark, index) => mark === null || mark === observed[index],
-    )
-  )
-    return false;
+  if (!session.board.every((mark, index) => mark === null || mark === observed[index])) return false;
   if (additions.length === 0) return false;
-  return additions.every(
-    (index) =>
-      session.cellCandidates[index]?.mark === observed[index] &&
-      stableCell(session.cellCandidates[index], at),
-  );
+  return additions.every((index) => session.cellCandidates[index]?.mark === observed[index] && stableCell(session.cellCandidates[index], at));
 }
 
+// True when the full board has stayed still long enough.
 function isFullyStable(session: Session, at: number): boolean {
-  return (
-    session.stableFrames >= REQUIRED_STABLE_FRAMES &&
-    session.stableSince !== null &&
-    at - session.stableSince >= STABLE_WINDOW_MS
-  );
+  return session.stableFrames >= REQUIRED_STABLE_FRAMES && session.stableSince !== null && at - session.stableSince >= STABLE_WINDOW_MS;
 }
 
-function tryAcceptStable(
-  session: Session,
-  observation: Observation,
-  visible: boolean[],
-  at: number,
-  localReadings: boolean,
-): { session: Session; accepted: Session | null } {
+// Accepts a stable full board when it is ready.
+function tryAcceptStable({ session, observation, visible, at, localReadings }: ObservationCheck): { session: Session; accepted: Session | null } {
   if (!visible.every(Boolean)) {
     return {
-      session: applyUnreadableBoard(session, observation, visible, at),
+      session: applyUnreadableBoard({ session, observation, visible, at }),
       accepted: null,
     };
   }
   const observed = observation.cells.map((cell) => cell.mark) as Board;
   const next = applyReadableBoard(session, observed, at);
   const additions = addedCells(next.board, observed);
-  if (
-    hasVerifiedChanges(next, observed, additions, localReadings, at) ||
-    isFullyStable(next, at)
-  ) {
+  if (hasVerifiedChanges({ session: next, observed, additions, localReadings, at }) || isFullyStable(next, at)) {
     return { session: next, accepted: acceptStableBoard(next, observed, at) };
   }
   return { session: next, accepted: null };
 }
 
-function confirmedMarksMatch(
-  session: Session,
-  observation: Observation,
-  visible: boolean[],
-  at: number,
-): boolean {
-  const known = session.board.some(Boolean)
-    ? session.board
-    : session.recognizedBoard;
-  return known.every(
-    (mark, index) =>
-      mark === null ||
-      (visible[index] &&
-        observation.cells[index].mark === mark &&
-        session.cellCandidates[index]?.mark === mark &&
-        stableCell(session.cellCandidates[index], at)),
-  );
+// True when known marks still match the page.
+function confirmedMarksMatch({ session, observation, visible, at }: ObservationFrame): boolean {
+  const known = session.board.some(Boolean) ? session.board : session.recognizedBoard;
+  return known.every((mark, index) => mark === null || (visible[index] && observation.cells[index].mark === mark && session.cellCandidates[index]?.mark === mark && stableCell(session.cellCandidates[index], at)));
 }
 
-function canClearRegistration(
-  session: Session,
-  observation: Observation,
-  visible: boolean[],
-  at: number,
-  localReadings: boolean,
-): boolean {
+// True when a found grid can be marked ready.
+function canClearRegistration({ session, observation, visible, at, localReadings }: ObservationCheck): boolean {
   if (session.boardCheck !== "verifying-grid") return false;
   if (!localReadings) return false;
   if (session.phase === "finished") return false;
-  if (!session.board.some(Boolean) && !session.recognizedBoard.some(Boolean))
-    return false;
-  return confirmedMarksMatch(session, observation, visible, at);
+  if (!session.board.some(Boolean) && !session.recognizedBoard.some(Boolean)) return false;
+  return confirmedMarksMatch({ session, observation, visible, at });
 }
 
-function maybeClearRegistration(
-  session: Session,
-  observation: Observation,
-  visible: boolean[],
-  at: number,
-  localReadings: boolean,
-): Session {
-  if (!canClearRegistration(session, observation, visible, at, localReadings)) {
-    return session;
+// Marks the board ready once known marks match.
+function maybeClearRegistration(input: ObservationCheck): Session {
+  if (!canClearRegistration(input)) {
+    return input.session;
   }
   return {
-    ...withUnverifiedPage(session),
+    ...withUnverifiedPage(input.session),
     boardCheck: "ready",
   };
 }
 
+// Asks for a full grid before continuing.
 function holdForBoardCheck(session: Session): Session {
   return {
     ...withUnverifiedPage(session),
-    message:
-      session.recoveryReason ??
-      "Show the whole grid briefly so I can check the board before continuing.",
+    message: session.recoveryReason ?? "Show the whole grid briefly so I can check the board before continuing.",
   };
 }
 
+// Returns the waiting instruction for the current turn.
 function waitingMessage(session: Session): string {
   if (session.recoveryReason !== null) return session.recoveryReason;
   if (session.pageMatchesBoard) return instruction(session);
@@ -452,38 +310,27 @@ function waitingMessage(session: Session): string {
   return "Reading the visible squares. Keep each new mark clear and still for a moment.";
 }
 
+// Updates the session from one new observation.
 export function observe(session: Session, observation: Observation): Session {
   const at = observation.timestamp;
   const timed = applyTiming(session, at);
   if (timed === null) return session;
   const quality = applyQuality(timed, observation);
   if (quality.done) return quality.session;
-  const { localReadings } = quality;
   const visible = observation.cells.map(cellVisible);
-  let next = updateCandidates(
-    quality.session,
-    observation,
-    visible,
-    at,
-    localReadings,
-  );
+  const frame = { observation, visible, at, localReadings: quality.localReadings };
+  let next = updateCandidates({ session: quality.session, ...frame });
   const advanced = advanceRecognizedTurn(next, observation);
   if (advanced) return advanced;
-  next = maybeClearRegistration(next, observation, visible, at, localReadings);
-  const attempt = tryAcceptStable(
-    next,
-    observation,
-    visible,
-    at,
-    localReadings,
-  );
+  next = maybeClearRegistration({ session: next, ...frame });
+  const attempt = tryAcceptStable({ session: next, ...frame });
   if (attempt.accepted) return attempt.accepted;
   next = attempt.session;
   if (next.boardCheck !== "ready") return holdForBoardCheck(next);
-  if (localReadings) {
-    const damaged = checkPartialDamage(next, observation, visible, at);
+  if (frame.localReadings) {
+    const damaged = checkPartialDamage({ session: next, ...frame });
     if (damaged) return damaged;
-    const added = checkPartialAdditions(next, observation, visible, at);
+    const added = checkPartialAdditions({ session: next, ...frame });
     if (added) return added;
   }
   return { ...next, message: waitingMessage(next) };

@@ -8,6 +8,7 @@ type TutorialHeaderProps = {
   onClose: () => void;
 };
 
+// Shows the step count and the close button.
 export function TutorialHeader({ id, step, onClose }: TutorialHeaderProps) {
   return (
     <div className="flex shrink-0 items-center justify-between">

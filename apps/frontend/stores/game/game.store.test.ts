@@ -1,6 +1,11 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { marks, observation } from "../../../../tests/helpers/boards.ts";
-import { agentReply } from "../../../../tests/helpers/agent-fixtures.ts";
+import { afterEach } from "vitest";
+import { describe } from "vitest";
+import { expect } from "vitest";
+import { it } from "vitest";
+import { vi } from "vitest";
+import { marks } from "../../../../tests/helpers/boards.ts";
+import { observation } from "../../../../tests/helpers/boards.ts";
+import { gameAgentReply } from "../../../../tests/helpers/game-agent-fixtures.ts";
 import { GameStore } from "./game.store";
 
 afterEach(() => {
@@ -25,7 +30,7 @@ describe("GameStore", () => {
     const game = new GameStore();
     game.source = "camera";
     game.cameraFeed.observation = observation(".........", 10);
-    game.agent.reply = {
+    game.gameAgent.reply = {
       sessionId: "s",
       revision: 1,
       session: game.session,
@@ -215,7 +220,7 @@ describe("GameStore", () => {
       "fetch",
       vi.fn().mockResolvedValue({
         ok: true,
-        json: async () => agentReply(),
+        json: async () => gameAgentReply(),
       }),
     );
     const game = new GameStore();
@@ -224,7 +229,7 @@ describe("GameStore", () => {
     expect(started).toBe(true);
     expect(game.stage).toBe("playing");
     expect(game.usesRemoteAgent).toBe(true);
-    await vi.waitFor(() => expect(game.agent.reply).not.toBeNull());
+    await vi.waitFor(() => expect(game.gameAgent.reply).not.toBeNull());
     expect(game.preparingBoard).toBe(false);
   });
 
@@ -243,9 +248,7 @@ describe("GameStore", () => {
     const game = new GameStore();
     game.source = "camera";
     game.cameraFeed.observation = observation("....X....", 10);
-    expect(game.observation?.cells.every((cell) => cell.mark === null)).toBe(
-      true,
-    );
+    expect(game.observation?.cells.every((cell) => cell.mark === null)).toBe(true);
     expect(game.observation?.cells.every((cell) => !cell.readable)).toBe(true);
   });
 

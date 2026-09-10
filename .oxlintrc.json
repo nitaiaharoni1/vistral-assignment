@@ -1,6 +1,7 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": ["typescript", "react", "import", "unicorn", "oxc"],
+  "jsPlugins": ["./shared/oxlint-plugins/one-import-per-line.js"],
   "env": { "browser": true, "es2022": true },
   "settings": {
     "react": { "version": "19.2.8" }
@@ -15,27 +16,35 @@
     "react/exhaustive-deps": "error",
     "react/react-in-jsx-scope": "off",
     "import/no-unassigned-import": "off",
+    "import/no-duplicates": "off",
+    "vistral/one-import-per-line": "error",
     "typescript/consistent-type-imports": "error",
     "typescript/no-explicit-any": "error",
+    "typescript/no-extraneous-class": ["error", { "allowWithDecorator": true }],
     "import/no-cycle": "error",
     "eqeqeq": "error",
+    "prefer-const": "error",
+    "no-var": "error",
+    "object-shorthand": "error",
+    "react/self-closing-comp": "error",
+    "unicorn/prefer-node-protocol": "error",
+    "unicorn/prefer-array-some": "error",
+    "unicorn/no-useless-spread": "error",
     "no-console": "error",
     "no-debugger": "error",
-    "max-lines": [
-      "error",
-      { "max": 500, "skipBlankLines": true, "skipComments": true }
-    ],
+    "max-lines": ["error", { "max": 500, "skipBlankLines": true, "skipComments": true }],
     "max-lines-per-function": [
       "error",
       {
-        "max": 80,
+        "max": 50,
         "skipBlankLines": true,
         "skipComments": true,
         "IIFEs": true
       }
     ],
     "complexity": ["error", { "max": 15 }],
-    "max-depth": ["error", 4]
+    "max-depth": ["error", 4],
+    "max-params": ["error", { "max": 3 }]
   },
   "overrides": [
     {
@@ -52,6 +61,20 @@
         "max-depth": "off",
         "complexity": "off",
         "no-await-in-loop": "off"
+      }
+    },
+    {
+      "files": ["apps/backend/**/*.service.ts"],
+      "rules": {
+        "typescript/explicit-member-accessibility": [
+          "error",
+          {
+            "accessibility": "explicit",
+            "overrides": {
+              "constructors": "no-public"
+            }
+          }
+        ]
       }
     }
   ],

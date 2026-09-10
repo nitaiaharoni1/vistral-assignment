@@ -1,14 +1,16 @@
-import { describe, expect, it } from "vitest";
-import { createSession } from "@shared/session.helpers";
-import { observation, session } from "../../../../tests/helpers/boards.ts";
-import {
-  nextActionCopy,
-  nextActionNeedsAttention,
-  nextActionNewGameLabel,
-  nextActionShowsNewGame,
-  type NextActionSource,
-} from "./next-action-copy";
+import { describe } from "vitest";
+import { expect } from "vitest";
+import { it } from "vitest";
+import { createSession } from "@shared/session-helpers/session.helpers";
+import { observation } from "../../../../tests/helpers/boards.ts";
+import { session } from "../../../../tests/helpers/boards.ts";
+import { nextActionCopy } from "./next-action-copy";
+import { nextActionNeedsAttention } from "./next-action-copy";
+import { nextActionNewGameLabel } from "./next-action-copy";
+import { nextActionShowsNewGame } from "./next-action-copy";
+import type { NextActionSource } from "./next-action-copy";
 
+// Builds a default next-action source for tests.
 function source(overrides: Partial<NextActionSource> = {}): NextActionSource {
   return {
     stage: "playing",
@@ -47,41 +49,31 @@ describe("nextActionCopy", () => {
   });
 
   it("covers restart, detecting, setup, and pause", () => {
-    expect(
-      nextActionCopy(source({ needsRestart: true, error: "Camera lost." })),
-    ).toMatchObject({ title: "Let’s reconnect.", symbol: "eye" });
+    expect(nextActionCopy(source({ needsRestart: true, error: "Camera lost." }))).toMatchObject({ title: "Let’s reconnect.", symbol: "eye" });
     expect(nextActionCopy(source({ stage: "detecting" }))).toMatchObject({
       title: "Reading your board…",
     });
     expect(nextActionCopy(source({ stage: "calibrating" }))).toMatchObject({
       symbol: "eye",
     });
-    expect(
-      nextActionCopy(source({ session: session({ paused: true }) })),
-    ).toMatchObject({ title: "Paused.", symbol: "pause" });
+    expect(nextActionCopy(source({ session: session({ paused: true }) }))).toMatchObject({ title: "Paused.", symbol: "pause" });
   });
 
   it("watches replay and guides a pending O", () => {
-    expect(
-      nextActionCopy(source({ session: session({ mode: "replay" }) })),
-    ).toMatchObject({ title: "Watching X.", symbol: "eye" });
+    expect(nextActionCopy(source({ session: session({ mode: "replay" }) }))).toMatchObject({ title: "Watching X.", symbol: "eye" });
     const pending = session({ phase: "draw-ai", pendingMove: 4 });
     expect(nextActionCopy(source({ session: pending }))).toMatchObject({
       title: "Draw O in the center.",
       symbol: "o",
     });
     pending.recognizedBoard[4] = "O";
-    expect(nextActionCopy(source({ session: pending })).title).toBe(
-      "O detected.",
-    );
+    expect(nextActionCopy(source({ session: pending })).title).toBe("O detected.");
   });
 
   it("guides a human X and a recovery", () => {
     const visible = observation("X........", 10);
     visible.cells[0].readable = true;
-    expect(nextActionCopy(source({ observation: visible })).guidance).toMatch(
-      /Hold your X still/,
-    );
+    expect(nextActionCopy(source({ observation: visible })).guidance).toMatch(/Hold your X still/);
     expect(
       nextActionCopy(
         source({
@@ -137,7 +129,7 @@ describe("nextActionCopy", () => {
       nextActionCopy(
         source({
           session: session({ phase: "draw-ai", pendingMove: null }),
-          observation: observation(".........", 10, [], { quality: "dark" }),
+          observation: observation(".........", 10, { quality: "dark" }),
         }),
       ),
     ).toMatchObject({ title: "A clearer view, please.", symbol: "eye" });
@@ -160,15 +152,8 @@ describe("nextActionCopy", () => {
   });
 
   it("uses setup and detecting hints, and watches replay O", () => {
-    expect(
-      nextActionCopy(source({ stage: "corners", error: "Grid slipped." }))
-        .title,
-    ).toBe("Let’s get a clearer view.");
-    expect(
-      nextActionCopy(
-        source({ stage: "detecting", detectionHint: "Tilt less." }),
-      ).guidance,
-    ).toBe("Tilt less.");
+    expect(nextActionCopy(source({ stage: "corners", error: "Grid slipped." })).title).toBe("Let’s get a clearer view.");
+    expect(nextActionCopy(source({ stage: "detecting", detectionHint: "Tilt less." })).guidance).toBe("Tilt less.");
     expect(
       nextActionCopy(
         source({
@@ -191,25 +176,17 @@ describe("nextAction flags", () => {
     expect(nextActionNewGameLabel(finished)).toBe("Play again");
     expect(nextActionNeedsAttention(finished)).toBe(false);
     expect(nextActionShowsNewGame(source({ needsRestart: true }))).toBe(true);
-    expect(nextActionNewGameLabel(source({ needsRestart: true }))).toBe(
-      "New session",
-    );
+    expect(nextActionNewGameLabel(source({ needsRestart: true }))).toBe("New session");
   });
 
   it("asks for attention on a bad human move, not during setup", () => {
-    expect(
-      nextActionNeedsAttention(
-        source({ session: session({ recoveryReason: "Wrong mark." }) }),
-      ),
-    ).toBe(true);
-    expect(nextActionNeedsAttention(source({ stage: "calibrating" }))).toBe(
-      false,
-    );
+    expect(nextActionNeedsAttention(source({ session: session({ recoveryReason: "Wrong mark." }) }))).toBe(true);
+    expect(nextActionNeedsAttention(source({ stage: "calibrating" }))).toBe(false);
     expect(
       nextActionNeedsAttention(
         source({
           session: session({ phase: "draw-ai", pendingMove: null }),
-          observation: observation(".........", 10, [], { quality: "moving" }),
+          observation: observation(".........", 10, { quality: "moving" }),
         }),
       ),
     ).toBe(true);

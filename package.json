@@ -10,12 +10,12 @@
     "preview": "vite preview --host 127.0.0.1",
     "typecheck": "tsc --noEmit",
     "lint": "oxlint apps shared tests/setup tests/helpers vite.config.ts vitest.config.ts --deny-warnings",
-    "format": "prettier --write apps shared tests/setup tests/helpers docs package.json tsconfig.json vite.config.ts vitest.config.ts .oxlintrc.json",
-    "format:check": "prettier --check apps shared tests/setup tests/helpers docs package.json tsconfig.json vite.config.ts vitest.config.ts .oxlintrc.json",
+    "format": "prettier --write apps shared tests/setup tests/helpers docs package.json tsconfig.json vite.config.ts vitest.config.ts .oxlintrc.json .prettierrc.json",
+    "format:check": "prettier --check apps shared tests/setup tests/helpers docs package.json tsconfig.json vite.config.ts vitest.config.ts .oxlintrc.json .prettierrc.json",
     "check": "npm run typecheck && npm run lint && npm run format:check",
     "test": "vitest run",
     "replay": "node tests/video-replay.mjs",
-    "agent": "node --env-file-if-exists=.env.local --import tsx apps/backend/index.ts"
+    "agent": "node --env-file-if-exists=.env.local --import tsx apps/backend/main.ts"
   },
   "engines": {
     "node": ">=24.0.0"
@@ -26,7 +26,10 @@
     "@nestjs/common": "^12.0.1",
     "@nestjs/core": "^12.0.1",
     "@nestjs/platform-express": "^12.0.1",
+    "@openrouter/sdk": "^1.2.116",
     "@phosphor-icons/react": "^2.1.10",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.15.1",
     "mobx": "^7.0.3",
     "mobx-react-lite": "^5.0.3",
     "react": "^19.2.8",
@@ -46,6 +49,7 @@
     "jsdom": "^29.1.1",
     "oxlint": "^1.82.0",
     "prettier": "^3.9.6",
+    "rolldown": "^1.2.8",
     "tailwindcss": "^4.3.3",
     "tsx": "^4.23.13",
     "typescript": "^7.0.2",

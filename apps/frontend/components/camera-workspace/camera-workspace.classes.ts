@@ -1,4 +1,4 @@
-import { cn } from "../shared/cn";
+import { cn } from "../shared/cn/cn";
 
 export const cameraPanelWelcome = cn(
   "grid min-h-[min(610px,calc(100dvh-140px))] min-w-0 grid-cols-[0.95fr_1.05fr] items-center gap-14",
@@ -11,13 +11,9 @@ export const cameraPanelLive = "flex h-full min-h-0 flex-col";
 
 export const welcomeArtSlotClass = "max-[600px]:min-h-28 max-[600px]:flex-1";
 
-export const cameraFrameSlotClass =
-  "grid min-h-0 flex-1 place-items-start justify-items-center [container-type:size]";
+export const cameraFrameSlotClass = "grid min-h-0 flex-1 items-start justify-items-center [container-type:size]";
 
-export const welcomeCopyClass = cn(
-  "min-w-0 py-6 max-[600px]:w-full max-[600px]:shrink-0 max-[600px]:p-0",
-  "short-landscape:py-2",
-);
+export const welcomeCopyClass = cn("min-w-0 py-6 max-[600px]:w-full max-[600px]:shrink-0 max-[600px]:p-0", "short-landscape:py-2");
 
 export const welcomeTitleClass = cn(
   "text-[72px] leading-[1.02] font-[780] tracking-[-0.04em] text-nowrap",
@@ -33,11 +29,7 @@ export const welcomeLeadClass = cn(
   "short-landscape:mt-4 short-landscape:text-base short-landscape:leading-normal",
 );
 
-export const welcomeActionsClass = cn(
-  "mt-[34px] flex flex-wrap items-center gap-5",
-  "max-[1150px]:gap-3 max-[800px]:mt-6 max-[600px]:mt-[clamp(12px,2.4dvh,20px)] max-[600px]:gap-5",
-  "max-[359px]:gap-2.5 short-landscape:mt-4",
-);
+export const welcomeActionsClass = cn("mt-[34px] flex flex-wrap items-center gap-5", "max-[1150px]:gap-3 max-[800px]:mt-6 max-[600px]:mt-[clamp(12px,2.4dvh,20px)] max-[600px]:gap-5", "max-[359px]:gap-2.5 short-landscape:mt-4");
 
 export const welcomeUtilitiesClass = cn(
   "mt-14 flex flex-wrap items-center gap-[18px] text-[13px] text-muted [&>span]:text-[#b1b7c3]",
@@ -62,40 +54,21 @@ export const cameraStageLive = cn(
 
 export const cameraImagePlaneClass = "relative mx-auto w-full";
 
-export const cameraImagePlaneWelcomeClass = cn(
-  cameraImagePlaneClass,
-  "max-[600px]:h-full max-[600px]:max-h-none",
-);
+export const cameraImagePlaneWelcomeClass = cn(cameraImagePlaneClass, "max-[600px]:h-full max-[600px]:max-h-none");
 
-export const cameraImagePlaneLiveClass = cn(
-  cameraImagePlaneClass,
-  "short-orient:w-[min(100%,calc(100cqh*var(--frame-ratio)))]",
-);
+export const cameraImagePlaneLiveClass = cn(cameraImagePlaneClass, "short-orient:w-[min(100%,calc(100cqh*var(--frame-ratio)))]");
 
-export const cameraNextActionClass = cn(
-  "absolute right-2.5 bottom-2.5 left-2.5",
-  "short-orient:left-auto short-orient:w-60",
-);
+export const cameraNextActionClass = cn("absolute right-2.5 bottom-2.5 left-2.5", "short-orient:left-auto short-orient:w-60");
 
-export const cameraStageBlocked = cn(
-  "[&_canvas]:invisible [&_video]:invisible",
-);
+export const cameraStageBlocked = cn("[&_canvas]:invisible [&_video]:invisible");
 
-export const sourceVideoHidden =
-  "pointer-events-none fixed bottom-0 left-0 h-px w-px opacity-0";
+export const sourceVideoHidden = "pointer-events-none fixed bottom-0 left-0 h-px w-px opacity-0";
 
-export const sourceVideoPreview =
-  "static block aspect-[var(--frame-ratio)] h-auto w-full rounded-2xl object-contain opacity-100";
+export const sourceVideoPreview = "static block aspect-[var(--frame-ratio)] h-auto w-full rounded-2xl object-contain opacity-100";
 
-export const welcomeArtClass = cn(
-  "block aspect-square h-auto w-full object-cover",
-  "max-[600px]:h-full max-[600px]:aspect-auto max-[600px]:object-center",
-);
+export const welcomeArtClass = cn("block aspect-square h-auto w-full object-cover", "max-[600px]:h-full max-[600px]:aspect-auto max-[600px]:object-center");
 
-export const frameStatusClass = cn(
-  "pointer-events-none absolute top-3.5 right-3.5 left-3.5 flex items-start justify-end gap-2",
-  "max-[600px]:top-2.5 max-[600px]:right-2.5 max-[600px]:left-2.5",
-);
+export const frameStatusClass = cn("pointer-events-none absolute top-3.5 right-3.5 left-3.5 flex items-start justify-end gap-2", "max-[600px]:top-2.5 max-[600px]:right-2.5 max-[600px]:left-2.5");
 
 export const cameraBlockerClass = cn(
   "absolute inset-0 flex flex-col items-center justify-center gap-4 overflow-auto rounded-2xl bg-accent-wash p-6 text-center text-ink",
@@ -103,5 +76,4 @@ export const cameraBlockerClass = cn(
   "short-orient:gap-2.5 short-orient:p-4",
 );
 
-export const overlayLegendClass =
-  "flex flex-wrap items-center gap-x-4 gap-y-2.5 text-xs text-muted [&>span]:inline-flex [&>span]:items-center [&>span]:gap-[5px]";
+export const overlayLegendClass = "flex flex-wrap items-center gap-x-4 gap-y-2.5 text-xs text-muted [&>span]:inline-flex [&>span]:items-center [&>span]:gap-[5px]";

@@ -7,7 +7,7 @@ process.env.PAPERPLAY_DIR ??= mkdtempSync(join(tmpdir(), "paperplay-test-"));
 process.env.AGENT_BUDGET_USD ??= "100";
 process.env.OPENROUTER_API_KEY ??= "test-openrouter-key";
 
-const { state } = await import("../../apps/backend/storage/storage.ts");
+const { state } = await import("../../apps/backend/game-agent/services/game-agent-storage/game-agent-storage.service.ts");
 
 beforeEach(() => {
   state.spent = 0;

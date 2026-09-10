@@ -1,6 +1,10 @@
-import { render, screen } from "@testing-library/react";
+import { render } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { describe } from "vitest";
+import { expect } from "vitest";
+import { it } from "vitest";
+import { vi } from "vitest";
 import { Modal } from "./Modal.component";
 
 describe("Modal", () => {
@@ -14,9 +18,7 @@ describe("Modal", () => {
     );
     const dialog = screen.getByRole("dialog", { name: "Reset?" });
     expect(dialog).toHaveAttribute("aria-describedby", "copy");
-    dialog.dispatchEvent(
-      new Event("cancel", { bubbles: true, cancelable: true }),
-    );
+    dialog.dispatchEvent(new Event("cancel", { bubbles: true, cancelable: true }));
     expect(onClose).toHaveBeenCalledOnce();
   });
 
