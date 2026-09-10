@@ -4,6 +4,8 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
+    "prepare": "node scripts/env-guard.mjs install",
+    "env:check": "node scripts/env-guard.mjs",
     "start": "vite --host 127.0.0.1",
     "dev": "vite --host 127.0.0.1",
     "build": "tsc -b && vite build",

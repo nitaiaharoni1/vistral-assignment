@@ -10,6 +10,7 @@ output/
 .paperplay/
 .env
 .env.*
+!.env.example
 .vscode/
 
 # Original 160 MB recording: ships in the zip, too large for GitHub

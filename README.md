@@ -22,11 +22,19 @@ Have Node.js **24.x with npm**, a computer with a webcam and a modern browser, a
 npm ci
 ```
 
-**2. Add your key.** Create a file named `.env.local` next to `package.json`:
+**2. Add your key.** Copy the public template next to `package.json` (do not overwrite an existing `.env.local`):
+
+```sh
+cp -n .env.example .env.local
+```
+
+Open `.env.local` and fill in `OPENROUTER_API_KEY` with your own key. Leave the other settings at their defaults to start:
 
 ```dotenv
 OPENROUTER_API_KEY=sk-or-your-key-here
 ```
+
+`.env.example` contains only public defaults and an empty key. Put secrets and custom settings in `.env.local`, never in the example or a `VITE_*` variable (those variables can reach the browser). Both processes read `.env.local`; restart them after changes.
 
 **3. Start the two processes.** In one terminal:
 
@@ -124,6 +132,17 @@ Both processes bind to `127.0.0.1`. Board crops and corrected examples are sent 
 Reloading the page creates a new game; it does not resume the saved session. After an analysis failure, the client tries `/sync`. If it cannot recover a newer reply, it makes the same view eligible for an automatic retry after the backoff.
 
 ## Development
+
+### Keeping local configuration private
+
+`npm ci` installs this repository's Git guards automatically, preserving existing pre-commit and pre-push hooks. If you installed with lifecycle scripts disabled, run `npm run prepare` before committing.
+
+- `.gitignore` excludes `.env`, `.env.local`, and other `.env.*` files. Only the root [`.env.example`](.env.example) is public.
+- Before a commit, the guard checks the actual staged files, including private environment files added with `git add -f`. The example accepts only the five exact public defaults listed in `scripts/env-guard.mjs`, with an empty API key. Extra settings, comments, or changed values are rejected. Change personal settings in `.env.local`.
+- Before a push, the guard checks every outgoing commit, so removing a secret in a later commit does not hide the earlier copy. Error messages do not print configuration values.
+- `npm run env:check` checks the staged environment files and your working copy of the example. To intentionally change a public default, review and update both the example and the guard's approved values together.
+
+These guards protect environment files, not secrets pasted into arbitrary source files, images, or documents. Local hooks can also be bypassed. Keep any existing general secret scanner enabled; do not treat this as a guarantee against every possible leak. If a real key reaches GitHub, revoke it with the provider immediately; deleting the latest copy does not remove it from Git history.
 
 ```sh
 npm run check     # typecheck, lint, format
