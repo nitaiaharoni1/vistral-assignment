@@ -1,0 +1,13 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.DS_Store
+.impeccable/review/
+output/
+*.zip
+*.local
+
+.paperplay/
+.env
+.env.*
+.vscode/
