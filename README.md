@@ -6,6 +6,8 @@ The app has a **React + MobX frontend** and a **NestJS backend**. Both run local
 
 ## Demo video
 
+https://github.com/user-attachments/assets/00edf122-2622-4812-9bbf-565d4d89545a
+
 **[vistral-nitai-demo-video-720p.mp4](./vistral-nitai-demo-video-720p.mp4)**: one full game, end to end, with the human and the page in frame (84 s, approximately 8.5 MB, H.264 with audio).
 
 `vistral-nitai-demo-video.MP4` is the larger original recording, retained separately and excluded from git. Use the linked compressed copy to review the submitted game.
