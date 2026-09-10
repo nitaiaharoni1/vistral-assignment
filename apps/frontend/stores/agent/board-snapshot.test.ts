@@ -65,20 +65,26 @@ describe("captureBoard", () => {
         };
       },
     } as unknown as HTMLCanvasElement;
-    const create = vi.spyOn(document, "createElement").mockImplementation(() => {
-      const data = { data: new Uint8ClampedArray(384 * 384 * 4), width: 384, height: 384 };
-      return {
-        width: 0,
-        height: 0,
-        getContext() {
-          return {
-            createImageData: () => data,
-            putImageData() {},
-          };
-        },
-        toDataURL: () => "data:image/jpeg;base64,/9j/SNAP",
-      } as unknown as HTMLCanvasElement;
-    });
+    const create = vi
+      .spyOn(document, "createElement")
+      .mockImplementation(() => {
+        const data = {
+          data: new Uint8ClampedArray(384 * 384 * 4),
+          width: 384,
+          height: 384,
+        };
+        return {
+          width: 0,
+          height: 0,
+          getContext() {
+            return {
+              createImageData: () => data,
+              putImageData() {},
+            };
+          },
+          toDataURL: () => "data:image/jpeg;base64,/9j/SNAP",
+        } as unknown as HTMLCanvasElement;
+      });
     const snapshot = captureBoard(source, corners);
     create.mockRestore();
     expect(snapshot.image).toBe("data:image/jpeg;base64,/9j/SNAP");

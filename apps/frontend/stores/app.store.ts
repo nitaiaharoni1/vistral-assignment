@@ -36,7 +36,6 @@ export class AppStore {
   notice = "";
   resetOpen = false;
   voiceOn = savedVoice();
-  private readonly stopSpeaking: () => void;
 
   constructor(
     private readonly game: GameStore,
@@ -50,7 +49,10 @@ export class AppStore {
       },
       { autoBind: true },
     );
-    this.stopSpeaking = reaction(
+  }
+
+  startVoice(): () => void {
+    return reaction(
       () => this.spokenInstruction,
       (text) => speak(text),
     );
@@ -70,10 +72,6 @@ export class AppStore {
     try {
       localStorage.setItem(VOICE_KEY, this.voiceOn ? "on" : "off");
     } catch {}
-  }
-
-  dispose() {
-    this.stopSpeaking();
   }
 
   openTutorial() {

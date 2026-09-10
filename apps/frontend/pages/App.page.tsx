@@ -51,7 +51,7 @@ const App = observer(function App({
     [game, saveSessionFile],
   );
 
-  useEffect(() => () => app.dispose(), [app]);
+  useEffect(() => app.startVoice(), [app]);
 
   useLayoutEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
