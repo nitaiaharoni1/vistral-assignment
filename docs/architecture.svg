@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1400" height="1090" viewBox="0 0 1400 1090" role="img" aria-labelledby="title desc">
   <title id="title">Paperplay: current camera agent and proposed multi-game services</title>
-  <desc id="desc">Live camera play uses a browser worker, local NestJS backend, and a perception-only model through the OpenRouter SDK. Shared minimax chooses moves. The screen shows the pending instruction. Completed camera games persist capture timing for the next game without manual corrections. Two optional corrected examples also persist per browser profile. Real-camera improvement remains unproven. Video and demo processing stay local. The diagram below the built summary is proposed: separate reader, coordinator, move chooser, approved rules, and evaluated learning releases. Automatic acceptance requires observed moves; user corrections are recorded separately.</desc>
+  <desc id="desc">Live camera play uses cleaned grayscale for grid search and sends a stable 288 by 288 cleaned JPEG to a local NestJS backend only when needed. Original camera images remain available for local quality and tracking checks. OpenRouter hosts the perception-only model, using prompt paper-board-v3. Shared minimax chooses moves. Completed camera games persist bounded capture timing for the next game; real-camera improvement and phone performance remain unproven. Video and demo processing stay local. Everything below the built summary is proposed: separate reader, coordinator, move chooser, approved rules, and evaluated learning releases. Shared engine and base weights are distinct from customer rules, examples, and learned settings. Automatic acceptance requires observed moves; optional user corrections are recorded separately.</desc>
   <defs>
     <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#647168"/></marker>
     <marker id="orangeArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#b85330"/></marker>
@@ -19,18 +19,20 @@
   <text x="50" y="102" font-size="39" font-weight="700" letter-spacing="-1.3">The page decides what is real.</text>
   <text x="50" y="136" font-size="17" fill="#5f6e64">Preserve one contract as the system grows: observe the physical move before committing it.</text>
 
-  <rect x="50" y="168" width="1295" height="76" rx="10" fill="#e8eee4"/>
+  <rect x="50" y="168" width="1295" height="96" rx="10" fill="#e8eee4"/>
   <text x="72" y="194" class="eyebrow">BUILT / REACT + MOBX / NESTJS / HOSTED READER</text>
-  <text x="72" y="214" font-size="15">Camera: grid tracking → stable crop → NestJS + OpenRouter SDK → board checks + minimax → screen.</text>
-  <text x="72" y="235" font-size="14">Completed game → save reading metrics → adjust next-game timing. No manual correction needed; improvement unproven.</text>
+  <text x="72" y="214" font-size="15">Camera → grid search → clean 288×288 JPEG on demand → NestJS + OpenRouter reader → rules + minimax → screen.</text>
+  <text x="72" y="234" font-size="14">Grayscale cleanup suppresses faint traces. Raw images still drive quality checks. Very faint real marks can also be lost.</text>
+  <text x="72" y="254" font-size="14">Finished game → save metrics → bounded next-game timing. Persistent learning is built; improved recognition remains unproven.</text>
 
-  <text x="50" y="271" class="eyebrow">01 / PROPOSED RUNTIME</text>
-  <text x="1345" y="271" class="label" text-anchor="end">Discrete, observable tabletop games</text>
+  <text x="50" y="291" class="eyebrow">01 / PROPOSED RUNTIME</text>
+  <text x="1345" y="136" class="label" text-anchor="end">Scope: visible, turn-based games</text>
+  <text x="50" y="313" class="label">TL;DR: Read the page, check the rules, then ask the person to draw.</text>
 
   <g transform="translate(50 326)">
     <rect class="box" width="195" height="112" rx="10"/>
     <text x="18" y="31" class="heading">Camera client</text>
-    <text x="18" y="60" class="body">Crop and sample</text>
+    <text x="18" y="60" class="body">Select and clean crops</text>
     <text x="18" y="84" class="body">Bounded frame stream</text>
   </g>
   <g transform="translate(270 326)">
@@ -42,7 +44,7 @@
   <g transform="translate(490 326)">
     <rect class="box" width="195" height="112" rx="10"/>
     <text x="18" y="31" class="heading">Board reader</text>
-    <text x="18" y="60" class="body">Geometry or detector</text>
+    <text x="18" y="60" class="body">Local or hosted vision</text>
     <text x="18" y="84" class="body">State + evidence</text>
   </g>
   <g transform="translate(710 326)">
@@ -72,12 +74,14 @@
     <path d="M1027 438V476H807V440"/>
     <path d="M1247 438V506"/>
   </g>
-  <text x="1013" y="297" class="label" text-anchor="middle">session validates and communicates proposal</text>
-  <text x="918" y="495" class="label" text-anchor="middle">legal proposal returns to session</text>
+  <text x="1013" y="297" class="label" text-anchor="middle">coordinator saves and sends proposal</text>
+  <text x="918" y="495" class="label" text-anchor="middle">move proposal returns for validation</text>
 
   <rect x="490" y="522" width="415" height="64" rx="8" fill="#eef0e9"/>
-  <text x="507" y="547" font-size="14" font-weight="700">Optional model path</text>
-  <text x="507" y="568" class="label">Ambiguous still crops, never every video frame</text>
+  <path d="M587 440V520" class="connector" stroke-dasharray="4 4" marker-start="url(#arrow)"/>
+  <text x="600" y="465" class="label">crop / reading</text>
+  <text x="507" y="547" font-size="14" font-weight="700">Optional hosted-model fallback</text>
+  <text x="507" y="568" class="label">Evaluate local-first reading before enabling it</text>
   <rect x="1150" y="508" width="195" height="78" rx="10" fill="#f7e9de" stroke="#e8cbb8"/>
   <text x="1168" y="539" class="heading">Human draws</text>
   <text x="1168" y="564" class="body">Then lifts their hand</text>
@@ -87,6 +91,7 @@
 
   <path d="M50 660H1345" stroke="#d7dfd7"/>
   <text x="50" y="700" class="eyebrow">02 / PROPOSED RULES IN</text>
+  <text x="50" y="719" class="label">TL;DR: Load checked rules and board data; unsupported game types still need engine work.</text>
   <g transform="translate(50 727)">
     <rect class="box" width="270" height="98" rx="10"/>
     <text x="18" y="32" class="heading">Game package</text>
@@ -95,7 +100,7 @@
   </g>
   <g transform="translate(350 727)">
     <rect class="box" width="270" height="98" rx="10"/>
-    <text x="18" y="32" class="heading">Typed compiler</text>
+    <text x="18" y="32" class="heading">Rules compiler</text>
     <text x="18" y="59" class="body">Model may draft structured rules</text>
     <text x="18" y="81" class="label">Bounded language; reject ambiguity</text>
   </g>
@@ -108,6 +113,7 @@
   <g class="connector"><path d="M320 776H348"/><path d="M620 776H648"/><path d="M920 776H948"/></g>
 
   <text x="50" y="869" class="eyebrow">03 / PROPOSED EVALUATED LEARNING</text>
+  <text x="50" y="888" class="label">TL;DR: Compare with real labeled games before releasing a learned change.</text>
   <g transform="translate(50 895)">
     <rect class="box" width="270" height="98" rx="10"/>
     <text x="18" y="32" class="heading">Reviewed examples</text>
@@ -122,17 +128,17 @@
   </g>
   <g transform="translate(650 895)">
     <rect class="box" width="270" height="98" rx="10"/>
-    <text x="18" y="32" class="heading">Evaluate + canary</text>
+    <text x="18" y="32" class="heading">Evaluate + small trial</text>
     <text x="18" y="59" class="body">Held-out writers and cameras</text>
     <text x="18" y="81" class="label">Reject regressions; roll back quickly</text>
   </g>
   <g class="connector"><path d="M320 944H348"/><path d="M620 944H648"/><path d="M920 944H948"/></g>
 
   <rect x="950" y="727" width="395" height="266" rx="10" fill="#e8eee4" stroke="#cfdcc9"/>
-  <text x="972" y="765" class="heading">Immutable artifact registry</text>
-  <text x="972" y="799" class="body">Signed rule and board packages</text>
-  <text x="972" y="825" class="body">Approved base weights, scoped adapters</text>
-  <text x="972" y="851" class="body">Tenant and game release pointers</text>
+  <text x="972" y="765" class="heading">Versioned releases and state</text>
+  <text x="972" y="799" class="body">Shared: engine, public rules, base weights</text>
+  <text x="972" y="825" class="body">Customer: private rules, examples, settings</text>
+  <text x="972" y="851" class="body">Session: board, pending move, versions</text>
   <path d="M972 874H1323" stroke="#c6d3c0"/>
   <text x="972" y="906" font-size="15" font-weight="700">Pin versions when each session starts.</text>
   <text x="972" y="933" class="body">Rollback changes new-session defaults.</text>
@@ -140,7 +146,7 @@
   <path d="M1147 727V680" class="connector"/>
   <text x="1163" y="704" class="label">to runtime services</text>
 
-  <text x="50" y="1036" class="label">TRACE / tenant · session · sequence · frame · calibration · rules · model or detector · search · decision ID</text>
-  <text x="50" y="1061" class="label">LOAD / latest-only waiting frames · one fenced session owner · durable accepted events · pause on uncertainty</text>
+  <text x="50" y="1036" class="label">TRACE / customer · session · frame · cleanup · rules · model or detector · prompt · search · decision ID</text>
+  <text x="50" y="1061" class="label">LOAD / vision latency and quota first · newest waiting crop only · one session writer · pause on uncertainty</text>
   <text x="1345" y="1061" class="label" text-anchor="end">PROPOSED SERVICES, NOT DEPLOYED</text>
 </svg>
